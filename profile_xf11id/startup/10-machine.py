@@ -1,59 +1,39 @@
 from ophyd.controls import PVPositioner
 
 # Undulator
-
-epu1_gap = PVPositioner('XF:23ID-ID{EPU:1-Ax:Gap}Pos-SP',
-                        readback='XF:23ID-ID{EPU:1-Ax:Gap}Pos-I',
-                        stop='SR:C23-ID:G1A{EPU:1-Ax:Gap}-Mtr.STOP',
-                        stop_val=1,
-                        put_complete=True,
-                        name='epu1_gap')
-
-epu2_gap = PVPositioner('XF:23ID-ID{EPU:2-Ax:Gap}Pos-SP',
-                        readback='XF:23ID-ID{EPU:2-Ax:Gap}Pos-I',
-                        stop='SR:C23-ID:G1A{EPU:2-Ax:Gap}-Mtr.STOP',
-                        stop_val=1,
-                        put_complete=True,
-                        name='epu2_gap')
-
-epu1_phase = PVPositioner('XF:23ID-ID{EPU:1-Ax:Phase}Pos-SP',
-                          readback='XF:23ID-ID{EPU:1-Ax:Phase}Pos-I',
-                          stop='SR:C23-ID:G1A{EPU:1-Ax:Phase}-Mtr.STOP',
-                          stop_val=1,
-                          put_complete=True,
-                          name='epu1_phase')
-
-epu2_phase = PVPositioner('XF:23ID-ID{EPU:2-Ax:Phase}Pos-SP',
-                          readback='XF:23ID-ID{EPU:2-Ax:Phase}Pos-I',
-                          stop='SR:C23-ID:G1A{EPU:2-Ax:Phase}-Mtr.STOP',
-                          stop_val=1,
-                          put_complete=True,
-                          name='epu2_phase')
-
+ivu_gap = PVPositioner('SR:C11-ID:G1{IVU20:1-Mtr:2}Inp:Pos',
+			readback='SR:C11-ID:G1{IVU20:1-LEnc}Gap',
+			actuate='SR:C11-ID:G1{IVU20:1-Mtr:2}Sw:Go',
+			actuate_val=1,
+			stop='SR:C11-ID:G1{IVU20:1-Mtr:2}Pos.STOP',
+			stop_val=1,
+			put_complete=True,
+			name='ivu_gap'
+		       )
 # Front End Slits (Primary Slits)
 
-fe_xc = PVPositioner('FE:C23A-OP{Slt:12-Ax:X}center',
-                     readback='FE:C23A-OP{Slt:12-Ax:X}t2.D',
-                     stop='FE:C23A-CT{MC:1}allstop',
+fe_xc = PVPositioner('FE:C11A-OP{Slt:12-Ax:X}center',
+                     readback='FE:C11A-OP{Slt:12-Ax:X}t2.D',
+                     stop='FE:C11A-CT{MC:1}allstop',
                      stop_val=1, put_complete=True,
                      name='fe_xc')
 
-fe_yc = PVPositioner('FE:C23A-OP{Slt:12-Ax:Y}center',
-                     readback='FE:C23A-OP{Slt:12-Ax:Y}t2.D',
-                     stop='FE:C23A-CT{MC:1}allstop',
+fe_yc = PVPositioner('FE:C11A-OP{Slt:12-Ax:Y}center',
+                     readback='FE:C11A-OP{Slt:12-Ax:Y}t2.D',
+                     stop='FE:C11A-CT{MC:1}allstop',
                      stop_val=1,
                      put_complete=True,
                      name='fe_yc')
 
-fe_xg = PVPositioner('FE:C23A-OP{Slt:12-Ax:X}size',
-                     readback='FE:C23A-OP{Slt:12-Ax:X}t2.C',
-                     stop='FE:C23A-CT{MC:1}allstop',
+fe_xg = PVPositioner('FE:C11A-OP{Slt:12-Ax:X}size',
+                     readback='FE:C11A-OP{Slt:12-Ax:X}t2.C',
+                     stop='FE:C11A-CT{MC:1}allstop',
                      stop_val=1, put_complete=True,
                      name='fe_xg')
 
-fe_yg = PVPositioner('FE:C23A-OP{Slt:12-Ax:Y}size',
-                     readback='FE:C23A-OP{Slt:12-Ax:Y}t2.C',
-                     stop='FE:C23A-CT{MC:1}allstop',
+fe_yg = PVPositioner('FE:C11A-OP{Slt:12-Ax:Y}size',
+                     readback='FE:C11A-OP{Slt:12-Ax:Y}t2.C',
+                     stop='FE:C11A-CT{MC:1}allstop',
                      stop_val=1,
                      put_complete=True,
                      name='fe_yg')

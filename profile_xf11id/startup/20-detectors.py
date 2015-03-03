@@ -1,45 +1,25 @@
-from ophyd.controls import ProsilicaDetector, EpicsSignal, EpicsScaler
-
-# CSX-1 Scalar
-
-sclr = EpicsScaler('XF:23ID1-ES{Sclr:1}', name='sclr', numchan=32)
-sclr_trig = EpicsSignal('XF:23ID1-ES{Sclr:1}.CNT', rw=True,
-                        name='sclr_trig')
-sclr_ch1 = EpicsSignal('XF:23ID1-ES{Sclr:1}.S1', rw=False,
-                       name='sclr_ch1')
-sclr_ch2 = EpicsSignal('XF:23ID1-ES{Sclr:1}.S2', rw=False,
-                       name='sclr_ch2')
-sclr_ch3 = EpicsSignal('XF:23ID1-ES{Sclr:1}.S3', rw=False,
-                       name='sclr_ch3')
-sclr_ch4 = EpicsSignal('XF:23ID1-ES{Sclr:1}.S4', rw=False,
-                       name='sclr_ch4')
-sclr_ch5 = EpicsSignal('XF:23ID1-ES{Sclr:1}.S5', rw=False,
-                       name='sclr_ch5')
-sclr_ch6 = EpicsSignal('XF:23ID1-ES{Sclr:1}.S6', rw=False,
-                       name='sclr_ch6')
-temp_a = EpicsSignal('XF:23ID1-ES{TCtrl:1-Chan:A}T-I', rw=False,
-                     name='temp_a')
-temp_b = EpicsSignal('XF:23ID1-ES{TCtrl:1-Chan:B}T-I', rw=False,
-                     name='temp_b')
+from ophyd.controls import ProsilicaDetector, EpicsSignal
 
 # AreaDetector Beam Instrumentation
-fs1_cam = ProsilicaDetector('XF:23IDA-BI:1{FS:1-Cam:1}')
-diag3_cam = ProsilicaDetector('XF:23ID1-BI{Diag:3-Cam:1}')
-diag5_cam = ProsilicaDetector('XF:23ID1-BI{Diag:5-Cam:1}')
-diag6_cam = ProsilicaDetector('XF:23ID1-BI{Diag:6-Cam:1}')
+fs1_cam = ProsilicaDetector('XF:11IDA-BI{FS:1-Cam:1}')
+wbs_cam = ProsilicaDetector('XF:11IDA-BI{BS:WB-Cam:1}')
+fs2_cam = ProsilicaDetector('XF:11IDA-BI{FS:2-Cam:1}')
+dcm_cam = ProsilicaDetector('XF:11IDA-BI{Mono:DCM-Cam:1}')
+pbs_cam = ProsilicaDetector('XF:11IDA-BI{BS:PB-Cam:1}')
+bpm_cam = ProsilicaDetector('XF:11IDA-BI{Bpm:1-Cam:1}')
 
 # Princeton CCD camera
 
-pimte_cam = EpicsSignal('XF:23ID1-ES{Dif-Cam:PIMTE}cam1:Acquire_RBV',
-                        write_pv='XF:23ID1-ES{Dif-Cam:PIMTE}cam1:Acquire',
-                        rw=True, name='pimte_cam_trigger')
-pimte_tot1 = EpicsSignal('XF:23ID1-ES{Dif-Cam:PIMTE}Stats1:Total_RBV',
-                         rw=False, name='pimte_tot1')
-pimte_tot2 = EpicsSignal('XF:23ID1-ES{Dif-Cam:PIMTE}Stats2:Total_RBV',
-                         rw=False, name='pimte_tot2')
-pimte_tot3 = EpicsSignal('XF:23ID1-ES{Dif-Cam:PIMTE}Stats3:Total_RBV',
-                         rw=False, name='pimte_tot3')
-pimte_tot4 = EpicsSignal('XF:23ID1-ES{Dif-Cam:PIMTE}Stats4:Total_RBV',
-                         rw=False, name='pimte_tot4')
-pimte_tot5 = EpicsSignal('XF:23ID1-ES{Dif-Cam:PIMTE}Stats5:Total_RBV',
-                         rw=False, name='pimte_tot5')
+bpm_cam_acq = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}cam1:Acquire_RBV',
+                        write_pv='XF:11IDA-BI{Bpm:1-Cam:1}cam1:Acquire',
+                        rw=True, name='bpm_cam_acq')
+bpm_tot1 = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}Stats1:Total_RBV',
+                         rw=False, name='bpm_tot1')
+bpm_tot2 = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}Stats2:Total_RBV',
+                         rw=False, name='bpm_tot2')
+bpm_tot3 = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}Stats3:Total_RBV',
+                         rw=False, name='bpm_tot3')
+bpm_tot4 = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}Stats4:Total_RBV',
+                         rw=False, name='bpm_tot4')
+bpm_tot5 = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}Stats5:Total_RBV',
+                         rw=False, name='bpm_tot5')
