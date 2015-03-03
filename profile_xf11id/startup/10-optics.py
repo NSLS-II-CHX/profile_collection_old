@@ -23,10 +23,26 @@ dcm_fp = EpicsMotor('XF:11IDA-OP{Mono:DCM-Ax:FP}Mtr', name='dcm_fp')
 
 # Mono-beam Slits
 
-mbs_xg = EpicsMotor('XF:11IDA-OP{Slt:MB-Ax:X}size', name='mbs_xg')
-mbs_xc = EpicsMotor('XF:11IDA-OP{Slt:MB-Ax:X}center', name='mbs_xc')
-mbs_yg = EpicsMotor('XF:11IDA-OP{Slt:MB-Ax:Y}size', name='mbs_yg')
-mbs_yc = EpicsMotor('XF:11IDA-OP{Slt:MB-Ax:Y}center', name='mbs_yc')
+mbs_xg = PVPositioner('XF:11IDA-OP{Slt:MB-Ax:X}size',
+		      readback='XF:11IDA-OP{Slt:MB-Ax:X}t2.C',
+		      done='XF:11IDA-OP{Slt:MB-Ax:X}DMOV',
+	              done_val=1,
+		      name='mbs_xg')
+mbs_xc = PVPositioner('XF:11IDA-OP{Slt:MB-Ax:X}center',
+		      readback='XF:11IDA-OP{Slt:MB-Ax:X}t2.D',
+		      done='XF:11IDA-OP{Slt:MB-Ax:X}DMOV',
+	              done_val=1,
+		      name='mbs_xc')
+mbs_yg = PVPositioner('XF:11IDA-OP{Slt:MB-Ax:Y}size',
+		      readback='XF:11IDA-OP{Slt:MB-Ax:Y}t2.C',
+		      done='XF:11IDA-OP{Slt:MB-Ax:Y}DMOV',
+	              done_val=1,
+		      name='mbs_yg')
+mbs_yc = PVPositioner('XF:11IDA-OP{Slt:MB-Ax:Y}center',
+		      readback='XF:11IDA-OP{Slt:MB-Ax:Y}t2.D',
+		      done='XF:11IDA-OP{Slt:MB-Ax:Y}DMOV',
+	              done_val=1,
+		      name='mbs_yc')
 
 # Diagnostic Manipulators
 foil_y = EpicsMotor('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr', name='foil_y')
