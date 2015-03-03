@@ -8,7 +8,7 @@ dcm_cam = ProsilicaDetector('XF:11IDA-BI{Mono:DCM-Cam:1}')
 pbs_cam = ProsilicaDetector('XF:11IDA-BI{BS:PB-Cam:1}')
 bpm_cam = ProsilicaDetector('XF:11IDA-BI{Bpm:1-Cam:1}')
 
-# Princeton CCD camera
+# BPM camera
 
 bpm_cam_acq = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}cam1:Acquire_RBV',
                         write_pv='XF:11IDA-BI{Bpm:1-Cam:1}cam1:Acquire',
