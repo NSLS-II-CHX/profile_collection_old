@@ -1,5 +1,4 @@
-from ophyd.userapi.scan_api import Scan, AScan, DScan, Count
-
+from ophyd.userapi.scan_api import Scan, AScan, DScan, Count, estimate
 scan = Scan()
 ascan = AScan()
 ascan.default_triggers = [bpm_cam_acq]
