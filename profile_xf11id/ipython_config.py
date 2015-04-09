@@ -1,5 +1,6 @@
 # Configuration file for ipython.
 
+import dataportal
 c = get_config()
 
 #------------------------------------------------------------------------------
@@ -36,7 +37,7 @@ c = get_config()
 
 # Pre-load matplotlib and numpy for interactive use, selecting a particular
 # matplotlib backend and loop integration.
-#c.InteractiveShellApp.pylab = 'auto'
+# c.InteractiveShellApp.pylab = 'auto'
 
 # Configure matplotlib for interactive use with the default matplotlib backend.
 # c.InteractiveShellApp.matplotlib = None
@@ -45,7 +46,7 @@ c = get_config()
 # an ``import *`` is done from numpy and pylab, when using pylab mode.
 #
 # When False, pylab mode should not import any names into the user namespace.
-# c.InteractiveShellApp.pylab_import_all = True
+# c.InteractiveShellApp.pylab_import_all = False
 
 c.StoreMagics.autorestore = True
 
@@ -82,7 +83,7 @@ c.InteractiveShellApp.extensions = ['ophyd.session',
 
 # Pre-load matplotlib and numpy for interactive use, selecting a particular
 # matplotlib backend and loop integration.
-c.TerminalIPythonApp.pylab = 'auto'
+# c.TerminalIPythonApp.pylab = 'auto'
 
 # Create a massive crash report when IPython encounters what may be an internal
 # error.  The default is to append a short message to the usual traceback
