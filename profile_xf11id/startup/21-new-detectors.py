@@ -1,14 +1,37 @@
 from ophyd.controls import ProsilicaDetector, EpicsSignal
-from ophyd.controls.area_detector import AreaDetector
+from ophyd.controls.area_detector import AreaDetector, AreaDetectorFileStoreHDF5, AreaDetectorFileStoreTIFF
 
 # AreaDetector Beam Instrumentation
-fs1_cam = ProsilicaDetector('XF:11IDA-BI{FS:1-Cam:1}')
-wbs_cam = ProsilicaDetector('XF:11IDA-BI{BS:WB-Cam:1}')
-fs2_cam = ProsilicaDetector('XF:11IDA-BI{FS:2-Cam:1}')
-dcm_cam = ProsilicaDetector('XF:11IDA-BI{Mono:DCM-Cam:1}')
-pbs_cam = ProsilicaDetector('XF:11IDA-BI{BS:PB-Cam:1}')
-bpm_cam = ProsilicaDetector('XF:11IDA-BI{Bpm:1-Cam:1}')
-eiger1M = AreaDetector('XF:11IDB-BI{Det:Eig1M}')
+# fs1_cam = ProsilicaDetector('XF:11IDA-BI{FS:1-Cam:1}')
+# wbs_cam = ProsilicaDetector('XF:11IDA-BI{BS:WB-Cam:1}')
+# fs2_cam = ProsilicaDetector('XF:11IDA-BI{FS:2-Cam:1}')
+# dcm_cam = ProsilicaDetector('XF:11IDA-BI{Mono:DCM-Cam:1}')
+# pbs_cam = ProsilicaDetector('XF:11IDA-BI{BS:PB-Cam:1}')
+# bpm_cam = ProsilicaDetector('XF:11IDA-BI{Bpm:1-Cam:1}')
+
+# AreaDetector Beam Instrumentation
+# Changed from ProscilicaDetector by D.A.
+fs1_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{FS:1-Cam:1}', name='fs1_cam_img',
+                                    file_path='/XF11ID/data/')
+wbs_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{BS:WB-Cam:1}', name='wbs_cam_img',
+                                    file_path='/XF11ID/data/')
+fs2_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{FS:2-Cam:1}', name='fs2_cam_img',
+                                    file_path='/XF11ID/data/')
+dcm_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam_img',
+                                    file_path='/XF11ID/data/')
+pbs_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{BS:PB-Cam:1}', name='pbs_cam_img',
+                                    file_path='/XF11ID/data/')
+bpm_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{Bpm:1-Cam:1}', name='bpm_cam_img',
+                                    file_path='/XF11ID/data/')
+
+# These talk to the same devices, but they do not save images.
+# They provide sum, stats, etc.
+fs1_cam = AreaDetector('XF:11IDA-BI{FS:1-Cam:1}', name='fs1_cam')
+wbs_cam = AreaDetector('XF:11IDA-BI{BS:WB-Cam:1}', name='wbs_cam')
+fs2_cam = AreaDetector('XF:11IDA-BI{FS:2-Cam:1}', name='fs2_cam')
+dcm_cam = AreaDetector('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam')
+pbs_cam = AreaDetector('XF:11IDA-BI{BS:PB-Cam:1}', name='pbs_cam')
+bpm_cam = AreaDetector('XF:11IDA-BI{Bpm:1-Cam:1}', name='bpm_cam')
 
 # BPM camera
 
@@ -25,6 +48,14 @@ bpm_tot4 = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}Stats4:Total_RBV',
                          rw=False, name='bpm_tot4')
 bpm_tot5 = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}Stats5:Total_RBV',
                          rw=False, name='bpm_tot5')
+
+# BPM Quad diodes 
+
+quadem_acq = EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Acquire_RBV',
+                        write_pv='XF:11IDA-BI{AH401B}AH401B:Acquire',
+                        rw=True, name='quadem_acq')
+quadem_sumall = EpicsSignal('XF:11IDA-BI{AH401B}AH401B:SumAll:MeanValue_RBV',
+                         rw=False, name='quadem_sumall')
 
 # FS1 camera
 
@@ -95,9 +126,22 @@ elm_s1234  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Sum1234:MeanValue_RBV',
 
 # X-ray eye camera
 
+# This is the HDF5 config. Use it once we can read while writing.
+# xray_cam_img = AreaDetectorFileStoreHDF5('XF:11IDB-BI{Cam:08}', name='xray_cam_img',
+#                                          file_path='/XF11ID/data/fs',
+#                                          stats=False)
+xray_cam_img = AreaDetectorFileStoreTIFF('XF:11IDB-BI{Cam:08}', name='xray_cam_img',
+                                         file_path='/XF11ID/data/',
+                                         stats=False)
+xray_cam_img.num_images = 1
+
+xray_cam = AreaDetector('XF:11IDB-BI{Cam:08}', name='xray_cam')
+xray_cam.num_images = 1
+
 xray_cam_acq = EpicsSignal('XF:11IDB-BI{Cam:08}cam1:Acquire_RBV',
                         write_pv='XF:11IDB-BI{Cam:08}cam1:Acquire',
                         rw=True, name='xray_cam_acq')
+# xray_cam_img.add_acquire_signal(xray_cam_acq)
 xray_tot1 = EpicsSignal('XF:11IDB-BI{Cam:08}Stats1:Total_RBV',
                          rw=False, name='xray_tot1')
 xray_tot2 = EpicsSignal('XF:11IDB-BI{Cam:08}Stats2:Total_RBV',

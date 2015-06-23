@@ -65,7 +65,7 @@ c.InteractiveShellApp.extensions = ['ophyd.session',
 # c.InteractiveShellApp.extra_extension = ''
 
 # List of files to run at IPython startup.
-c.InteractiveShellApp.exec_files = ['/home/xf11id/shared/xfuncs/xfuncs.py', '/home/xf11id/shared/CHX_wrapper/chx_wrapper.py']
+#c.InteractiveShellApp.exec_files = ['/home/xf11id/Repos/chxtools/chxtools/chx_wrapper.py']
 
 # A file to be run
 # c.InteractiveShellApp.file_to_run = ''
