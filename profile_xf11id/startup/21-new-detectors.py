@@ -12,17 +12,17 @@ from ophyd.controls.area_detector import AreaDetector, AreaDetectorFileStoreHDF5
 # AreaDetector Beam Instrumentation
 # Changed from ProscilicaDetector by D.A.
 fs1_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{FS:1-Cam:1}', name='fs1_cam_img',
-                                    file_path='/XF11ID/data/')
+                                    file_path='/nfs/xf11id/data/')
 wbs_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{BS:WB-Cam:1}', name='wbs_cam_img',
-                                    file_path='/XF11ID/data/')
+                                    file_path='/nfs/xf11id/data/')
 fs2_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{FS:2-Cam:1}', name='fs2_cam_img',
-                                    file_path='/XF11ID/data/')
+                                    file_path='/nfs/xf11id/data/')
 dcm_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam_img',
-                                    file_path='/XF11ID/data/')
+                                    file_path='/nfs/xf11id/data/')
 pbs_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{BS:PB-Cam:1}', name='pbs_cam_img',
-                                    file_path='/XF11ID/data/')
+                                    file_path='/nfs/xf11id/data/')
 bpm_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{Bpm:1-Cam:1}', name='bpm_cam_img',
-                                    file_path='/XF11ID/data/')
+                                    file_path='/nfs/xf11id/data/')
 
 # These talk to the same devices, but they do not save images.
 # They provide sum, stats, etc.

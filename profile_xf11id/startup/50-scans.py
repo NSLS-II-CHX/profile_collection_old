@@ -17,3 +17,4 @@ dscan = ophyd_tools.CHXDScan()
 # Import everything from these locations (for now!)
 # from chxtools.chx_wrapper import *
 from chxtools.xfuncs import *
+from chxtools.plot import plot1d
