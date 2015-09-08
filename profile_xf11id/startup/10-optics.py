@@ -21,6 +21,7 @@ pbs_i = EpicsMotor('XF:11IDA-OP{Slt:PB-Ax:I}Mtr', name='pbs_i')
 flt_y = EpicsMotor('XF:11IDA-OP{Flt:1-Ax:Y}Mtr', name='flt_y')
 
 # DCM
+dcm_en = EpicsMotor('XF:11IDA-OP{Mono:DCM-Ax:Energy}Mtr', name='dcm_en')
 dcm_b = EpicsMotor('XF:11IDA-OP{Mono:DCM-Ax:B}Mtr', name='dcm_b')
 dcm_x = EpicsMotor('XF:11IDA-OP{Mono:DCM-Ax:X}Mtr', name='dcm_x')
 dcm_r = EpicsMotor('XF:11IDA-OP{Mono:DCM-Ax:R}Mtr', name='dcm_r')
