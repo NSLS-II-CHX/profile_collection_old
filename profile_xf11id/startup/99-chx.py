@@ -1,8 +1,9 @@
 from chxtools.chx_wrapper import *
 from ophyd.userapi.scan_api import estimate
+import xfuncs as xf
 from prettytable import PrettyTable
 from chxtools.ophyd_tools import print_estimate_table_det_rows
-from dataportal import DataBroker, DataMuxer
+from dataportal import DataBroker, DataMuxer, Images
 import numpy as np
 
 def est(x_axis, scan_id):

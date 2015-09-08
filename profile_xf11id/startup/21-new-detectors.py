@@ -1,5 +1,5 @@
 from ophyd.controls import ProsilicaDetector, EpicsSignal
-from ophyd.controls.area_detector import AreaDetector, AreaDetectorFileStoreHDF5, AreaDetectorFileStoreTIFF
+from ophyd.controls.area_detector import AreaDetector, AreaDetectorFileStoreHDF5, AreaDetectorFileStoreTIFF, AreaDetectorFileStoreEiger
 
 # AreaDetector Beam Instrumentation
 # fs1_cam = ProsilicaDetector('XF:11IDA-BI{FS:1-Cam:1}')
@@ -23,6 +23,8 @@ pbs_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{BS:PB-Cam:1}', name='pbs_ca
                                     file_path='/nfs/xf11id/data/')
 bpm_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{Bpm:1-Cam:1}', name='bpm_cam_img',
                                     file_path='/nfs/xf11id/data/')
+eiger_cam_img = AreaDetectorFileStoreEiger('XF:11IDB-BI{Det:Eig1M}', name='eiger_cam_img',
+                                    file_path='/XF11ID/data/')
 
 # These talk to the same devices, but they do not save images.
 # They provide sum, stats, etc.
@@ -50,12 +52,12 @@ bpm_tot5 = EpicsSignal('XF:11IDA-BI{Bpm:1-Cam:1}Stats5:Total_RBV',
                          rw=False, name='bpm_tot5')
 
 # BPM Quad diodes 
-
-quadem_acq = EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Acquire_RBV',
-                        write_pv='XF:11IDA-BI{AH401B}AH401B:Acquire',
-                        rw=True, name='quadem_acq')
-quadem_sumall = EpicsSignal('XF:11IDA-BI{AH401B}AH401B:SumAll:MeanValue_RBV',
-                         rw=False, name='quadem_sumall')
+#
+#quadem_acq = EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Acquire_RBV',
+#                        write_pv='XF:11IDA-BI{AH401B}AH401B:Acquire',
+#                        rw=True, name='quadem_acq')
+#quadem_sumall = EpicsSignal('XF:11IDA-BI{AH401B}AH401B:SumAll:MeanValue_RBV',
+#                         rw=False, name='quadem_sumall')
 
 # FS1 camera
 
@@ -117,11 +119,11 @@ elm_d3  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Current3:MeanValue_RBV',
 			  rw=False, name='elm_d3')
 elm_d4  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Current4:MeanValue_RBV',
 			  rw=False, name='elm_d4')
-elm_s12  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Sum12:MeanValue_RBV',
+elm_s12  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:SumX:MeanValue_RBV',
 			  rw=False, name='elm_s12')
-elm_s34  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Sum34:MeanValue_RBV',
+elm_s34  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:SumY:MeanValue_RBV',
 			  rw=False, name='elm_s34')
-elm_s1234  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:Sum1234:MeanValue_RBV',
+elm_s1234  =  EpicsSignal('XF:11IDA-BI{AH401B}AH401B:SumAll:MeanValue_RBV',
 			  rw=False, name='elm_s1234') 
 
 # X-ray eye camera
