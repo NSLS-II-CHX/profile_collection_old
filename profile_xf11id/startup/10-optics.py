@@ -90,7 +90,12 @@ w1_y = EpicsMotor('XF:11IDB-OP{Win:1-Ax:Y}Mtr', name='w1_y')
 
 # Optics Table
 
+
 # Beam-defining "pre-kinoform" slits
+#XF:11IDB-OP{Slt:1-Ax:XGap}Mtr.DESC
+#Name: XF:11IDB-OP{Slt:1-Ax:XCtr}Mtr.DESC
+#caput XF:11IDB-OP{Slt:1-Ax:YGap}Mtr.DESC 'Y Gap (s1_yg)'
+#caput XF:11IDB-OP{Slt:1-Ax:YCtr}Mtr.DESC 'Y Center (s1_yc)'
 s1_xg = EpicsMotor('XF:11IDB-OP{Slt:1-Ax:XGap}Mtr', name='s1_xg')
 s1_xc = EpicsMotor('XF:11IDB-OP{Slt:1-Ax:XCtr}Mtr', name='s1_xc')
 s1_yg = EpicsMotor('XF:11IDB-OP{Slt:1-Ax:YGap}Mtr', name='s1_yg')
@@ -133,20 +138,22 @@ s4_xc = EpicsMotor('XF:11IDB-ES{Slt:4-Ax:XCtr}Mtr', name='s4_xc')
 s4_yg = EpicsMotor('XF:11IDB-ES{Slt:4-Ax:YGap}Mtr', name='s4_yg')
 s4_yc = EpicsMotor('XF:11IDB-ES{Slt:4-Ax:YCtr}Mtr', name='s4_yc')
 
-
-#s4_xg = EpicsMotor('XF:11IDB-OP{Slt:4-Ax:XGap}Mtr', name='s4_xg') 
-#s4_xc = EpicsMotor('XF:11IDB-OP{Slt:4-Ax:XCtr}Mtr', name='s4_xc')
-#s4_yg = EpicsMotor('XF:11IDB-OP{Slt:4-Ax:YGap}Mtr', name='s4_yg')
-#s4_yc = EpicsMotor('XF:11IDB-OP{Slt:4-Ax:YCtr}Mtr', name='s4_yc')
-
- 
-
-
-
-
-
-
-
-
-
-
+#Diffractometer
+diff_del = EpicsMotor('XF:11IDB-ES{Dif-Ax:Del}Mtr', name='diff_del')
+diff_gam = EpicsMotor('XF:11IDB-ES{Dif-Ax:Gam}Mtr', name='diff_gam')
+diff_om = EpicsMotor('XF:11IDB-ES{Dif-Ax:Om}Mtr', name='diff_om')
+diff_phi = EpicsMotor('XF:11IDB-ES{Dif-Ax:Ph}Mtr', name='diff_phi')
+diff_xb = EpicsMotor('XF:11IDB-ES{Dif-Ax:XB}Mtr', name='diff_xb')
+diff_yb = EpicsMotor('XF:11IDB-ES{Dif-Ax:YB}Mtr', name='diff_yb')
+diff_chh = EpicsMotor('XF:11IDB-ES{Dif-Ax:ChH}Mtr', name='diff_chh')
+diff_thh = EpicsMotor('XF:11IDB-ES{Dif-Ax:ThH}Mtr', name='diff_thh')
+diff_phh = EpicsMotor('XF:11IDB-ES{Dif-Ax:PhH}Mtr', name='diff_phh')
+diff_xh = EpicsMotor('XF:11IDB-ES{Dif-Ax:XH}Mtr', name='diff_xh')
+diff_yh = EpicsMotor('XF:11IDB-ES{Dif-Ax:YH2}Mtr', name='diff_yh')
+diff_zh = EpicsMotor('XF:11IDB-ES{Dif-Ax:ZH}Mtr', name='diff_zh')
+diff_chv = EpicsMotor('XF:11IDB-ES{Dif-Ax:ChV}Mtr', name='diff_chv')
+diff_thv = EpicsMotor('XF:11IDB-ES{Dif-Ax:ThV}Mtr', name='diff_thv')
+diff_xv = EpicsMotor('XF:11IDB-ES{Dif-Ax:XV}Mtr', name='diff_xv')
+diff_yv = EpicsMotor('XF:11IDB-ES{Dif-Ax:YV}Mtr', name='diff_yv')
+diff_zv = EpicsMotor('XF:11IDB-ES{Dif-Ax:ZV}Mtr', name='diff_zv')
+diff_xv2 = EpicsMotor('XF:11IDB-ES{Dif-Ax:XV2}Mtr', name='diff_xv2')
