@@ -98,6 +98,7 @@ w1_y = EpicsMotor('XF:11IDB-OP{Win:1-Ax:Y}Mtr', name='w1_y')
 #caput XF:11IDB-OP{Slt:1-Ax:YGap}Mtr.DESC 'Y Gap (s1_yg)'
 #caput XF:11IDB-OP{Slt:1-Ax:YCtr}Mtr.DESC 'Y Center (s1_yc)'
 s1_xg = EpicsMotor('XF:11IDB-OP{Slt:1-Ax:XGap}Mtr', name='s1_xg')
+
 s1_xc = EpicsMotor('XF:11IDB-OP{Slt:1-Ax:XCtr}Mtr', name='s1_xc')
 s1_yg = EpicsMotor('XF:11IDB-OP{Slt:1-Ax:YGap}Mtr', name='s1_yg')
 s1_yc = EpicsMotor('XF:11IDB-OP{Slt:1-Ax:YCtr}Mtr', name='s1_yc')
