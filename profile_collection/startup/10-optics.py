@@ -1,5 +1,11 @@
 from ophyd.controls import EpicsMotor, PVPositioner
 
+#gap
+#und_gap = 'SR:C11-ID:G1{IVU20:1-Mtr:2}'  #SR:C11-ID:G1{IVU20:1-Mtr:2}Inp:Pos ??
+ 
+
+
+
 # HDM
 hdm_x = EpicsMotor('XF:11IDA-OP{Mir:HDM-Ax:X}Mtr', name='hdm_x')
 hdm_y = EpicsMotor('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr', name='hdm_y')
@@ -36,6 +42,8 @@ dmm_y = EpicsMotor('XF:11IDA-OP{Mono:DMM-Ax:Y}Mtr', name='dmm_y')
 dmm_fp = EpicsMotor('XF:11IDA-OP{Mono:DMM-Ax:FP}Mtr', name='dmm_fp')
 
 # Mono-beam Slits
+
+ 
 
 mbs_xg = PVPositioner('XF:11IDA-OP{Slt:MB-Ax:X}size',
 		      readback='XF:11IDA-OP{Slt:MB-Ax:X}t2.C',

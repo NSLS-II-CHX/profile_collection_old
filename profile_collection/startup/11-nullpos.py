@@ -9,6 +9,7 @@ class NullPositioner(object):
 
     def __init__(self, name=None):
         self.name = name
+        self._name=name
         self.pvname = ['pain']
         self.report = {'pv': 'pain'}
 

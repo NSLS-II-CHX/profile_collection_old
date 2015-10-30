@@ -4,6 +4,7 @@ gs.DETS = [bpm_cam]
 import logging
 
 from ophyd.session import get_session_manager
+
 sessionmgr = get_session_manager()
 sessionmgr['olog_client'] = olog_client
 print('These positioners are disconnected:')
@@ -27,3 +28,13 @@ def print_md(name, doc):
         print('Metadata:\n', repr(doc))
 
 gs.RE.subscribe('start', print_scanid)
+
+from ophyd.commands import wh_pos,log_pos
+
+from ophyd.commands import mov
+
+
+
+from eiger_io.fs_handler import EigerHandler
+from filestore.api import register_handler
+register_handler("AD_EIGER", EigerHandler)

@@ -12,18 +12,28 @@ from ophyd.controls.area_detector import AreaDetector, AreaDetectorFileStoreHDF5
 # AreaDetector Beam Instrumentation
 # Changed from ProscilicaDetector by D.A.
 fs1_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{FS:1-Cam:1}', name='fs1_cam_img',
-                                    file_path='/nfs/xf11id/data/')
+                                    file_path='/XF11ID/data/')
 wbs_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{BS:WB-Cam:1}', name='wbs_cam_img',
-                                    file_path='/nfs/xf11id/data/')
+                                    file_path='/XF11ID/data/')
 fs2_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{FS:2-Cam:1}', name='fs2_cam_img',
-                                    file_path='/nfs/xf11id/data/')
+                                    file_path='/XF11ID/data/')
 dcm_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam_img',
-                                    file_path='/nfs/xf11id/data/')
+                                    file_path='/XF11ID/data/')
 pbs_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{BS:PB-Cam:1}', name='pbs_cam_img',
-                                    file_path='/nfs/xf11id/data/')
+                                    file_path='/XF11ID/data/')
 bpm_cam_img = AreaDetectorFileStoreHDF5('XF:11IDA-BI{Bpm:1-Cam:1}', name='bpm_cam_img',
-                                    file_path='/nfs/xf11id/data/')
+                                    file_path='/XF11ID/data/')
+
+
+bpm_cam_img =  AreaDetectorFileStoreTIFF('XF:11IDA-BI{Bpm:1-Cam:1}', name='bpm_cam_img',
+                                    file_path='/XF11ID/data/', stats=False)
+bpm_cam_img.num_images = 1
+
+
+
 eiger_cam_img = AreaDetectorFileStoreEiger('XF:11IDB-BI{Det:Eig1M}', name='eiger_cam_img',
+                                    file_path='/XF11ID/data/')
+eiger_4M_cam_img = AreaDetectorFileStoreEiger('XF:11IDB-BI{Det:Eig4M}', name='eiger_4M_cam_img',
                                     file_path='/XF11ID/data/')
 
 # These talk to the same devices, but they do not save images.
@@ -151,3 +161,5 @@ xray_tot2 = EpicsSignal('XF:11IDB-BI{Cam:08}Stats2:Total_RBV',
 xray_tot3 = EpicsSignal('XF:11IDB-BI{Cam:08}Stats3:Total_RBV',
                          rw=False, name='xray_tot3')
 
+fast_sh = EpicsSignal('XF:11IDB-ES{Zebra}:SOFT_IN:B0',
+                         rw=True, name='fast_sh')
