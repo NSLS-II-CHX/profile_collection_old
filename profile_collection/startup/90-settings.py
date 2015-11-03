@@ -29,11 +29,7 @@ def print_md(name, doc):
 
 gs.RE.subscribe('start', print_scanid)
 
-from ophyd.commands import wh_pos,log_pos
-
-from ophyd.commands import mov
-
-
+from ophyd.commands import wh_pos, log_pos, mov, movr
 
 from eiger_io.fs_handler import EigerHandler
 from filestore.api import register_handler
