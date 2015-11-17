@@ -35,19 +35,13 @@ from bluesky.callbacks import CallbackBase
 from IPython import get_ipython
 class OlogCallback(CallbackBase):
     def start(self, doc):
-        session = get_ipython()
-        commands = list(session.history_manager.get_range())
-        print("Received a start document")
-        print('scan_id = %s' % doc['scan_id'])
-        print('last command = %s ' % commands[-1][2])
-        print('start document = %s' % pformat(doc))
+        commands = list(get_ipython().session.history_manager.get_range())
         document_content = ('%s: %s\n\n'
                             'RunStart Document\n'
                             '-----------------\n'
                             '%s' % (doc['scan_id'],
                                     commands[-1][2],
                                     pformat(doc)))
-        print('document_content = %s' % document_content)
         client.log(document_content, logbooks='Data Acquisition')
 
 #dscan.default_sub_factories['all'].append(OlogCallback())
