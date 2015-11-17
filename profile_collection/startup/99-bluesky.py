@@ -16,8 +16,41 @@ def chx_plot_motor(scan):
         fig = plt.figure()
     return LivePlot(gs.PLOT_Y, scan.motor._name, fig=fig)
 
+# this changes the default plotter for *all* classes that 
+# inherit from bluesky.simple_scans._StepScan
 dscan.default_sub_factories['all'][1] = chx_plot_motor
 
 gs.PLOTMODE = 1
 
-from bluesky.global_state import resume, abort, stop, panic, all_is_well, state
+from bluesky.global_state import (resume, abort, stop, panic, 
+                                  all_is_well, state)
+
+
+# hacking on the logbook!
+
+from pyOlog import SimpleOlogClient
+client = SimpleOlogClient()
+from pprint import pformat, pprint
+from bluesky.callbacks import CallbackBase
+from IPython import get_ipython
+class OlogCallback(CallbackBase):
+    def start(self, doc):
+        session = get_ipython()
+        commands = list(session.history_manager.get_range())
+        print("Received a start document")
+        print('scan_id = %s' % doc['scan_id'])
+        print('last command = %s ' % commands[-1][2])
+        print('start document = %s' % pformat(doc))
+        document_content = ('%s: %s\n\n'
+                            'RunStart Document\n'
+                            '-----------------\n'
+                            '%s' % (doc['scan_id'],
+                                    commands[-1][2],
+                                    pformat(doc)))
+        print('document_content = %s' % document_content)
+        client.log(document_content, logbooks='Data Acquisition')
+
+#dscan.default_sub_factories['all'].append(OlogCallback())
+gs.RE.subscribe('start', OlogCallback())
+gs.RE.logbook = None
+
