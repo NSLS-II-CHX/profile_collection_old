@@ -199,3 +199,7 @@ diff_xv = EpicsMotor('XF:11IDB-ES{Dif-Ax:XV}Mtr', name='diff_xv')
 diff_yv = EpicsMotor('XF:11IDB-ES{Dif-Ax:YV}Mtr', name='diff_yv')
 diff_zv = EpicsMotor('XF:11IDB-ES{Dif-Ax:ZV}Mtr', name='diff_zv')
 diff_xv2 = EpicsMotor('XF:11IDB-ES{Dif-Ax:XV2}Mtr', name='diff_xv2')
+
+# sample beamstop
+sambst_x = EpicsMotor('XF:11IDB-OP{BS:Samp-Ax:X}Mtr', name='sambst_x')
+sambst_y = EpicsMotor('XF:11IDB-OP{BS:Samp-Ax:Y}Mtr', name='sambst_y')
