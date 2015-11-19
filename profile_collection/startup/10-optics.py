@@ -142,6 +142,38 @@ s2_xc = EpicsMotor('XF:11IDB-OP{Slt:2-Ax:XCtr}Mtr', name='s2_xc')
 s2_yg = EpicsMotor('XF:11IDB-OP{Slt:2-Ax:YGap}Mtr', name='s2_yg')
 s2_yc = EpicsMotor('XF:11IDB-OP{Slt:2-Ax:YCtr}Mtr', name='s2_yc')
 
+#Guard Slits (SmarAct)
+
+gs_xg = PVPositioner('XF:11IDB-OP{Slt:Guard-Ax:X}size',
+		      readback='XF:11IDB-OP{Slt:Guard-Ax:X}t2.C',
+		      done='XF:11IDB-OP{Slt:Guard-Ax:X}DMOV',
+	              done_val=1,
+		      name='gs_xg')
+
+gs_xc = PVPositioner('XF:11IDB-OP{Slt:Guard-Ax:X}center',
+		      readback='XF:11IDB-OP{Slt:Guard-Ax:X}t2.D',
+		      done='XF:11IDB-OP{Slt:Guard-Ax:X}DMOV',
+	              done_val=1,
+		      name='gs_xc')
+
+gs_yg = PVPositioner('XF:11IDB-OP{Slt:Guard-Ax:Y}size',
+		      readback='XF:11IDB-OP{Slt:Guard-Ax:Y}t2.C',
+		      done='XF:11IDB-OP{Slt:Guard-Ax:Y}DMOV',
+	              done_val=1,
+		      name='gs_yg')
+
+gs_yc = PVPositioner('XF:11IDB-OP{Slt:Guard-Ax:Y}center',
+		      readback='XF:11IDB-OP{Slt:Guard-Ax:Y}t2.D',
+		      done='XF:11IDB-OP{Slt:Guard-Ax:Y}DMOV',
+	              done_val=1,
+		      name='gs_yc')
+
+gs_b = EpicsMotor('XF:11IDB-OP{Slt:Guard-Ax:B}Mtr', name='gs_b')
+gs_t = EpicsMotor('XF:11IDB-OP{Slt:Guard-Ax:T}Mtr', name='gs_t')
+gs_i = EpicsMotor('XF:11IDB-OP{Slt:Guard-Ax:I}Mtr', name='gs_i')
+gs_o = EpicsMotor('XF:11IDB-OP{Slt:Guard-Ax:O}Mtr', name='gs_o')
+
+
 #Temporary Guard slits
 s4_xg = EpicsMotor('XF:11IDB-ES{Slt:4-Ax:XGap}Mtr', name='s4_xg')
 s4_xc = EpicsMotor('XF:11IDB-ES{Slt:4-Ax:XCtr}Mtr', name='s4_xc')
