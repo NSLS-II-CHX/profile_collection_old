@@ -28,23 +28,23 @@ from bluesky.global_state import (resume, abort, stop, panic,
 
 # hacking on the logbook!
 
-from pyOlog import SimpleOlogClient
-client = SimpleOlogClient()
-from pprint import pformat, pprint
-from bluesky.callbacks import CallbackBase
-from IPython import get_ipython
-class OlogCallback(CallbackBase):
-    def start(self, doc):
-        commands = list(get_ipython().session.history_manager.get_range())
-        document_content = ('%s: %s\n\n'
-                            'RunStart Document\n'
-                            '-----------------\n'
-                            '%s' % (doc['scan_id'],
-                                    commands[-1][2],
-                                    pformat(doc)))
-        client.log(document_content, logbooks='Data Acquisition')
-
+#from pyOlog import SimpleOlogClient
+#client = SimpleOlogClient()
+#from pprint import pformat, pprint
+#from bluesky.callbacks import CallbackBase
+#from IPython import get_ipython
+#class OlogCallback(CallbackBase):
+#    def start(self, doc):
+#        commands = list(get_ipython().session.history_manager.get_range())
+#        document_content = ('%s: %s\n\n'
+#                            'RunStart Document\n'
+#                            '-----------------\n'
+#                            '%s' % (doc['scan_id'],
+#                                    commands[-1][2],
+#                                    pformat(doc)))
+#        res = client.log(document_content, logbooks='Data Acquisition')
+#        print("client.log returned %s" % res)
 #dscan.default_sub_factories['all'].append(OlogCallback())
-gs.RE.subscribe('start', OlogCallback())
-gs.RE.logbook = None
+#gs.RE.subscribe('start', OlogCallback())
+#gs.RE.logbook = None
 
