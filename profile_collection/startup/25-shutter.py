@@ -25,12 +25,12 @@ class Shutter(SignalGroup):
 
 
 
-foe_sh = Shutter(open='XF:11ID-PPS{Sh:FE}Cmd:Opn-Cmd',
+fe_sh = Shutter(open='XF:11ID-PPS{Sh:FE}Cmd:Opn-Cmd',
                  open_status='XF:11ID-PPS{Sh:FE}Cmd:Opn-Sts',
                  close='XF:11ID-PPS{Sh:FE}Cmd:Cls-Cmd',
                  close_status='XF:11ID-PPS{Sh:FE}Cmd:Cls-Sts')
 
-fe_sh = Shutter(open='XF:11IDA-PPS{PSh}Cmd:Opn-Cmd',
+foe_sh = Shutter(open='XF:11IDA-PPS{PSh}Cmd:Opn-Cmd',
                 open_status='XF:11IDA-PPS{PSh}Cmd:Opn-Sts',
                 close='XF:11IDA-PPS{PSh}Cmd:Cls-Cmd',
                 close_status='XF:11IDA-PPS{PSh}Cmd:Cls-Sts')
