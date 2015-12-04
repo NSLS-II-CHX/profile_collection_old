@@ -2,7 +2,10 @@ import logging
 from bluesky.standard_config import *  # gs, etc.
 import matplotlib.pyplot as plt
 plt.ion()
-import bluesky.qt_kicker
+from bluesky import qt_kicker
+# start the qt event loop so that matplotlib plots will be
+# displayed during the scan
+qt_kicker.install_qt_kicker()
 from databroker import DataBroker as db, get_events, get_images, get_table
 
 from epics import caput, caget

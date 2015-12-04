@@ -14,7 +14,8 @@ print([k for k, v in sessionmgr.get_positioners().items() if not v.connected])
 gs.RE.md['owner'] = 'xf11id'
 gs.RE.md['group'] = 'chx'
 gs.RE.md['beamline_id'] = 'CHX'
-gs.RE.md['custom'] = {}
+# removing 'custom' as it is raising an exception in 0.3.2
+# gs.RE.md['custom'] = {}
 
 
 

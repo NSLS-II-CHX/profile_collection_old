@@ -52,22 +52,6 @@ gs.RE.logbook = None
 import os
 from datetime import datetime
 
-specfilepath = os.path.expanduser('~/specfiles/test.spec')
-from pprint import pprint
-
-def nest_list(lst, ncols):
-    numcols = 0
-    maxcols = 10
-    motors = [[]]
-    for item in lst:
-        if numcols == maxcols:
-            numcols=0
-            motors.append([])
-        motors[-1].append(str(item))
-        numcols += 1
-   
-    return motors
-    
 def write_spec_header(path, doc):
     # write a new spec file header!
     #F /home/xf11id/specfiles/test.spec
@@ -75,28 +59,21 @@ def write_spec_header(path, doc):
     #D 2015-12-03 16:48:58.341809
     #C xf11id  User = xf11id
     #O [list of all motors, 10 per line]
+    session_manager = get_session_manager()
+    pos = session_manager.get_positioners()
     spec_header = [
         '#F %s' % path,
         '#E %s' % int(doc['time']),
         # time might need to be formatted specifically
         '#D %s' % datetime.fromtimestamp(doc['time']),
         '#C %s  User = %s' % (doc['owner'], doc['owner']),
+        'O0 {}'.format(' '.join(sorted(list(pos.keys()))))
     ]
-    session_manager = get_session_manager()
-    pos = session_manager.get_positioners()
-    motors = nest_list(sorted(list(pos.keys())), 10)
-    for line_num, line in enumerate(motors):
-        spec_header.append(
-            '#O{0} {1}'.format(line_num, ' '.join(line)))
     with open(path, 'w') as f:
-        for line in spec_header:
-            f.write(line + '\n')
+        f.write('\n'.join(spec_header))
     return spec_header
                 
-def get_spec_header():
-    # this needs to be implemented...
-    raise NotImplementedError()
-    
+
 class LiveSpecFile(CallbackBase):
     def __init__(self, specfilepath):
         self.specfilepath = specfilepath
@@ -111,28 +88,25 @@ class LiveSpecFile(CallbackBase):
         last_command = last_command.replace('(', ' ')
         last_command = last_command.replace(')', ' ')
         last_command = last_command.replace(',', ' ')
-        self.acqisition_time = 1
+        dets = eval(doc['detectors'])
+        self.acquisition_time = dets[0].acquire_time
         # write a blank line between scans
         with open(self.specfilepath, 'a') as f:
-            f.write('\n')
+            f.write('\n\n')
         # write the new scan entry
         with open(self.specfilepath, 'a') as f:
             f.write('#S %s %s\n' % (doc['scan_id'], last_command))
             f.write('#D %s\n' % datetime.fromtimestamp(doc['time']))
-            f.write('#T %s (Seconds)\n' % self.acqisition_time)
+            f.write('#T %s (Seconds)\n' % self.acquisition_time)
         # write the motor positions
         session_manager = get_session_manager()
         pos = session_manager.get_positioners()        
-        positions = [v.position for k, v in sorted(pos.items())]
-        nested = nest_list(positions, 10)
-        print('nested')
-        pprint(nested)
+        positions = [str(v.position) for k, v in sorted(pos.items())]
         with open(self.specfilepath, 'a') as f:
-            for line_num, line in enumerate(nested):
-                f.write('#P{0} {1}\n'.format(line_num, ' '.join(line)))
+            f.write('#P0 {0}\n'.format(' '.join(positions)))
         print("RunStart document received in LiveSpecFile!")
         #raise
-        self.motorname = eval(db[-1]['start']['motor']).name
+        self.motorname = eval(doc['motor']).name
     
     def descriptor(self, doc):
         keys = sorted(list(doc['data_keys'].keys()))
@@ -148,12 +122,13 @@ class LiveSpecFile(CallbackBase):
     def event(self, doc):
         t = int(doc['time'])
         vals = [v for k, v in sorted(doc['data'].items()) if k != self.motorname]
-        vals.insert(0, self.acqisition_time)
+        vals.insert(0, self.acquisition_time)
         vals.insert(0, t)
         vals.insert(0, doc['data'][self.motorname])
         vals = [str(v) for v in vals]
         with open(self.specfilepath, 'a') as f:
             f.write('{0}  {1}\n'.format(vals[0], ' '.join(vals[1:])))
-        
 
-gs.RE.subscribe('all', LiveSpecFile(specfilepath=specfilepath))
+specfilepath = os.path.expanduser('~/specfiles/test.spec')
+live_specfile_callback = LiveSpecFile(specfilepath=specfilepath)
+gs.RE.subscribe('all', live_specfile_callback)
