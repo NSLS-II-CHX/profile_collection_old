@@ -104,6 +104,9 @@ class LiveSpecFile(CallbackBase):
         positions = [str(v.position) for k, v in sorted(pos.items())]
         with open(self.specfilepath, 'a') as f:
             f.write('#P0 {0}\n'.format(' '.join(positions)))
+        with open(self.specfilepath, 'a') as f:
+            for idx, (name, positioner) in enumerate(sorted(pos.items())):
+                f.write('#M%s %s %s\n' % (idx, name, str(positioner.position)))
         print("RunStart document received in LiveSpecFile!")
         #raise
         self.motorname = eval(doc['motor']).name
