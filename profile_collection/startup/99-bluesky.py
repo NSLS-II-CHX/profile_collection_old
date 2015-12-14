@@ -75,12 +75,9 @@ def write_spec_header(path, doc):
                 
 
 class LiveSpecFile(CallbackBase):
-    def __init__(self, specfilepath):
-        self.specfilepath = specfilepath
-        
     def start(self, doc):
-        if not os.path.exists(self.specfilepath):
-            spec_header = write_spec_header(self.specfilepath, doc)
+        if not os.path.exists(gs.specpath):
+            spec_header = write_spec_header(gs.specpath, doc)
         #else:
         #    spec_header = get_spec_header()
         last_command = list(
@@ -91,10 +88,10 @@ class LiveSpecFile(CallbackBase):
         dets = eval(doc['detectors'])
         self.acquisition_time = dets[0].acquire_time
         # write a blank line between scans
-        with open(self.specfilepath, 'a') as f:
+        with open(gs.specpath, 'a') as f:
             f.write('\n\n')
         # write the new scan entry
-        with open(self.specfilepath, 'a') as f:
+        with open(gs.specpath, 'a') as f:
             f.write('#S %s %s\n' % (doc['scan_id'], last_command))
             f.write('#D %s\n' % datetime.fromtimestamp(doc['time']))
             f.write('#T %s (Seconds)\n' % self.acquisition_time)
@@ -102,12 +99,15 @@ class LiveSpecFile(CallbackBase):
         session_manager = get_session_manager()
         pos = session_manager.get_positioners()        
         positions = [str(v.position) for k, v in sorted(pos.items())]
-        with open(self.specfilepath, 'a') as f:
+        with open(gs.specpath, 'a') as f:
             f.write('#P0 {0}\n'.format(' '.join(positions)))
-        with open(self.specfilepath, 'a') as f:
+        # writing the list of motor names and their current values in
+        # a more human readable way. Apparently "#M" is not a used key in
+        # spec. Fingers crossed....
+        with open(gs.specpath, 'a') as f:
             for idx, (name, positioner) in enumerate(sorted(pos.items())):
                 f.write('#M%s %s %s\n' % (idx, name, str(positioner.position)))
-        print("RunStart document received in LiveSpecFile!")
+        print("RunStart document received in LiveSpecFile")
         #raise
         self.motorname = eval(doc['motor']).name
     
@@ -117,7 +117,7 @@ class LiveSpecFile(CallbackBase):
         keys.insert(0, 'Seconds')
         keys.insert(0, 'Epoch')
         keys.insert(0, self.motorname)
-        with open(self.specfilepath, 'a') as f:
+        with open(gs.specpath, 'a') as f:
             f.write('#N %s\n' % len(keys))
             f.write('#L {0}    {1}\n'.format(keys[0], 
                                              '  '.join(keys[1:])))
@@ -129,9 +129,9 @@ class LiveSpecFile(CallbackBase):
         vals.insert(0, t)
         vals.insert(0, doc['data'][self.motorname])
         vals = [str(v) for v in vals]
-        with open(self.specfilepath, 'a') as f:
+        with open(gs.specpath, 'a') as f:
             f.write('{0}  {1}\n'.format(vals[0], ' '.join(vals[1:])))
 
-specfilepath = os.path.expanduser('~/specfiles/test.spec')
-live_specfile_callback = LiveSpecFile(specfilepath=specfilepath)
+gs.specpath = os.path.expanduser('~/specfiles/test.spec')
+live_specfile_callback = LiveSpecFile()
 gs.RE.subscribe('all', live_specfile_callback)
