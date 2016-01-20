@@ -42,6 +42,17 @@ def att(num):
 		mov(bst_y,.17)
 
 def W_in():
-	mov(bst_x,-12.5)
-	mov(bst_y,-.6298)
+	mov(bst_x,-12.19)
+	mov(bst_y,-.1298)
 
+def W_saxs():
+	mov(bst_x,-12.2005)
+	mov(bst_y,-.97985)
+
+
+def launch_4m():
+	det=eiger_4M_cam_img
+	caput ('XF:11IDB-BI{Det:Eig4M}cam1:SaveFiles', 'Yes')
+	gs.RE(Count([det],1,0))
+
+gs.PLOTMODE = 2

@@ -43,7 +43,8 @@ class FastShutter(EpicsSignal):
     def close(self):
         self.put(0)
 
-fast_sh = FastShutter('XF:11IDB-ES{Zebra}:SOFT_IN:B0',
+fast_sh = FastShutter('XF:11IDB-ES{Zebra}:OUT1_TTL:STA',
+                      write_pv='XF:11IDB-ES{Zebra}:SOFT_IN:B0',
                       rw=True, name='fast_sh')
 
 

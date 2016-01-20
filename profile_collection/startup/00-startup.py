@@ -18,3 +18,5 @@ from bluesky.scientific_callbacks import plot_peak_stats
 # from chxtools.plot import plot1
 from bluesky.scans import Count,AbsScan, DeltaScan
 
+
+import chx_attfuncs as atten
