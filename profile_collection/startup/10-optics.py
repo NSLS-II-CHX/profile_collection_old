@@ -1,50 +1,40 @@
-from ophyd import EpicsMotor, PVPositioner, Device
-from ophyd import Component as Cpt, DynamicDeviceComponent as DDC
+from ophyd import (EpicsMotor, PVPositioner, Device, EpicsSignal,
+                   EpicsSignalRO)
+from ophyd import (Component as Cpt, FormattedComponent,
+                   DynamicDeviceComponent as DDC)
 
 #gap
 #und_gap = 'SR:C11-ID:G1{IVU20:1-Mtr:2}'  #SR:C11-ID:G1{IVU20:1-Mtr:2}Inp:Pos ??
 
 
 class MotorCenterAndGap(Device):
+    "Center and gap using Epics Motor records"
     xc = Cpt(EpicsMotor, '-Ax:XCtr}Mtr')
     yc = Cpt(EpicsMotor, '-Ax:YCtr}Mtr')
     xg = Cpt(EpicsMotor, '-Ax:XGap}Mtr')
     yg = Cpt(EpicsMotor, '-Ax:YGap}Mtr')
 
 
-class SlitXGap(PVPositioner):
-    setpoint = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:X}size')
-    readback = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:X}t2.C')
-    done = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:X}DMOV')
-	done_value = 1
+class VirtualGap(PVPositioner):
+    setpoint = Cpt(EpicsSignal, 'size')
+    readback = Cpt(EpicsSignalRO, 't2.C')
+    done = Cpt(EpicsSignalRO, 'DMOV')
+    done_value = 1
 
 
-class SlitXCenter(PVPositioner):
-    setpoint = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:X}center')
-    readback = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:X}t2.D')
-    done = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:X}DMOV')
-	done_value = 1
-
-
-class SlitYGap(PVPositioner):
-    setpoint = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:Y}size')
-    readback = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:Y}t2.C')
-    done = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:Y}DMOV')
-	done_value = 1
-
-
-class SlitXCenter(PVPositioner):
-    setpoint = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:Y}center')
-    readback= Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:Y}t2.D')
-    done = Cpt(EpicsSignal, 'XF:11IDA-OP{Slt:MB-Ax:Y}DMOV')
-	done_value = 1
+class VirtualCenter(PVPositioner):
+    setpoint = Cpt(EpicsSignal, 'center')
+    readback = Cpt(EpicsSignalRO, 't2.D')
+    done = Cpt(EpicsSignalRO, 'DMOV')
+    done_value = 1
 
 
 class VirtualMotorCenterAndGap(Device):
-    xc = Cpt(SlitXCenter)
-    yc = Cpt(SlitYCenter)
-    xg = Cpt(SlitXGap)
-    yg = Cpt(SltYGap)
+    "Center and gap with virtual motors"
+    xc = Cpt(VirtualCenter, '-Ax:X}')
+    yc = Cpt(VirtualCenter, '-Ax:Y}')
+    xg = Cpt(VirtualGap, '-Ax:X}')
+    yg = Cpt(VirtualGap, '-Ax:Y}')
 
 
 class Blades(Device):
@@ -55,9 +45,11 @@ class Blades(Device):
 
 
 class MotorSlits(Blades, MotorCenterAndGap):
+    "combine t b i o and xc yc xg yg"
     pass
 
 class VirtualMotorSlits(Blades, VirtualMotorCenterAndGap):
+    "combine t b i o and xc yc xg yg"
     pass
 
 
@@ -73,7 +65,7 @@ class XYThetaMotor(XYMotor):
 
 class HorizontalDiffractionMirror(XYMotor):
     "x and y with pitch, which has different read and write PVs"
-    p = Cpt(EpicsMotor, read_pv='-Ax:P}E-I', write_pv='-Ax:P}E-SP')
+    p = FormattedComponent(EpicsSignal, read_pv='{self.prefix}-Ax:P}}E-I', write_pv='{self.prefix}-Ax:P}}E-SP')
 
 
 
@@ -91,7 +83,7 @@ class DMM(DCM):
 
 
 class Transfocator(Device):
-    crl = DDC({'num{i}'.format(i): (EpicsMotor, '%d-Ax:X}Mtr' % i)
+    crl = DDC({'num%d' % i: (EpicsMotor, '%d-Ax:X}Mtr' % i)
                for i in range(1, 9)})
     tran_x = Cpt(EpicsMotor, 'Ves-Ax:X}Mtr')
     tran_y = Cpt(EpicsMotor, 'Ves-Ax:Y}Mtr')
@@ -138,19 +130,20 @@ sambst = EpicsMotor('XF:11IDB-OP{BS:Samp')
 
 s1 = MotorCenterAndGap('XF:11IDB-OP{Slt:1', name='s1')
 k1 = Kinoform('XF:11IDB-OP{Lens:1', name='k1')  # upstream
-k2 = Kinoform('XF:11IDB-OP{Lens:2', 'k2')  # downstream
+k2 = Kinoform('XF:11IDB-OP{Lens:2', name='k2')  # downstream
 gi = XYThetaMotor('XF:11IDB-OP{Mir:GI', name='gi')  # GI-mirror
 s2 = MotorCenterAndGap('XF:11IDB-OP{Slt:2', name='s2') #Beam-defining (large JJ) slits
 pbs = MotorSlits('XF:11IDA-OP{Slt:PB', name='pbs')  # pink beam slits
 flt_y = EpicsMotor('XF:11IDA-OP{Flt:1-Ax:Y}Mtr', name='flt_y')  # filters
-dcm = DCM('XF:11IDA-OP{Mono:DCM-'), name='dcm')
-dmm = DCM('XF:11IDA-OP{Mono:DMM-', name='dmm')
+dcm = DCM('XF:11IDA-OP{Mono:DCM', name='dcm')
+dmm = DCM('XF:11IDA-OP{Mono:DMM', name='dmm')
 mbs = VirtualMotorSlits('XF:11IDA-OP{Slt:MB', name='mbs')  # Mono-beam Slits
 s4 = MotorCenterAndGap('XF:11IDB-ES{Slt:4-Ax:XGap}Mtr', name='s4')  # temp guard slits
 
 # Diagnostic Manipulators
 foil_y = EpicsMotor('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr', name='foil_y')
-bpm = XYMotor('XF:11IDA-BI{Bpm:1-', name='bpm')
+bpm1 = XYMotor('XF:11IDA-BI{Bpm:1-', name='bpm1')
+bpm2 = XYMotor('XF:11IDA-BI{Bpm:2-', name='bpm2')
 
 w1 = XYMotor('XF:11IDB-OP{Win:1', name='w1')  # window positioners
 hdm = HorizontalDiffractionMirror('XF:11IDA-OP{Mir:HDM', name='hdm')

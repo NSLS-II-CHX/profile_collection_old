@@ -1,14 +1,7 @@
-gs.DETS = [bpm_cam]
+gs.DETS = [xray_eye3]
 
 
 import logging
-
-from ophyd.session import get_session_manager
-
-sessionmgr = get_session_manager()
-sessionmgr['olog_client'] = olog_client
-print('These positioners are disconnected:')
-print([k for k, v in sessionmgr.get_positioners().items() if not v.connected])
 
 # metadata set at startup
 gs.RE.md['owner'] = 'xf11id'

@@ -1,26 +1,31 @@
-from ophyd.controls import (EpicsMotor, PseudoPositioner)
+from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle)
+from ophyd import Component as Cpt
 
 
 class SamplePositioner(PseudoPositioner):
-    '''Maintains an offset between a master/slave set of positioners
-       such that the slave movement is the negative of the master's relative
-       motion (i.e. maintains constant, negative, relative offset).
-
-       Assumes that the user has adjusted the axes to their initial positions.
-
-       Example
-       -------------
-       pseudo_master = SamplePositioner("pmaster", [real_master, real_slave],
-                                        concurrent=True)
     '''
+    Maintains an offset between a master/slave set of positioners
+    such that the slave movement is the negative of the master's relative
+    motion (i.e. maintains constant, negative, relative offset).
+    Assumes that the user has adjusted the axes to their initial positions.
 
-    def _calc_forward(self, *args, pseudo=None, **kwargs):
-        delta = -(pseudo - self['pseudo'].position)
-        return [pseudo, self._real[1].position + delta]
+    Example
+    -------------
+    psamp_x = SamplePositioner(prefix='', name='psamp_x', concurrent=True)
+    '''
+    physical_sample_holder = Cpt(EpicsMotor, '...')
+    beamstop = Cpt(EpicsMotor, '...')
+    sample_holder = Cpt(PseudoSingle, '...')
 
-    def _calc_reverse(self, *args, **kwargs):
-        return [self._real[0].position]
+    def forward(self, pos):
+        "pos is a self.PseudoPosition"
+        delta = pos - pos.sample_holder.pos
+        return self.RealPosition(physical_sample_holder=pos.sample_holder,
+                                 beamstop=self.beamstop.position - delta)
+
+    def reverse(self, pos):
+        "pos is self.RealPosition"
+        return self.PsuedoPosition(sample_holder=pos.physical_sample_holder)
 
 
-# NOTE: assumes sam_x and sambst_x are accessible from ipython's namespace
-psamp_x = SamplePositioner('psamp_x', [sam_x, sambst_x], concurrent=True)
+psamp_x = SamplePositioner(prefix='', name='psamp_x', concurrent=True)

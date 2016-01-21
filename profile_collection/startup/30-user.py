@@ -1,4 +1,5 @@
-from ophyd.controls import EpicsMotor
+from ophyd import EpicsMotor
+from epics import caput
 
 class ReversedEpicsMotor(EpicsMotor):
     
@@ -22,13 +23,13 @@ bst_y = ReversedEpicsMotor('XF:11IDB-ES{Dif-Ax:YV}Mtr', name = 'bst_y')
 #bst_rot = diff_om
 
 # Alias motors
-bst_x = diff_xv2
-sam_x = diff_xh
-sam_y = diff_yh
+bst_x = diff.xv2
+sam_x = diff.xh
+sam_y = diff.yh
 #sam_z = diff_zh
 #sam_th = diff_thh
 #sam_chi = diff_chh
-sam_pitch = diff_phh
+sam_pitch = diff.phh
 
 def att(num):
 	if num == 0:

@@ -1,12 +1,8 @@
-from __future__ import print_function
-import epics
-import logging
-
-from ophyd.controls import EpicsSignal
-from ophyd.controls.signal import SignalGroup
+from ophyd import EpicsSignal, Device
+from ophyd import Component as Cpt
 
 
-class Shutter(SignalGroup):
+class FourPVShutter(Device):
     def __init__(self, open=None, open_status=None,
                  close=None, close_status=None):
        super(Shutter, self).__init__()
@@ -24,29 +20,38 @@ class Shutter(SignalGroup):
         self._close.value = 1
 
 
+class FourPVShutter(Device):
+    open_command = Cpt(EpicsSignal, 'Cmd:Opn-Cmd')
+    open_status = Cpt(EpicsSignal, 'Cmd:Opn-Sts')
+    close_command = Cpt(EpicsSignal, 'Cmd:Cls-Cmd')
+    close_status = Cpt(EpicsSignal, 'Cmd:Cls-Sts')
 
-fe_sh = Shutter(open='XF:11ID-PPS{Sh:FE}Cmd:Opn-Cmd',
-                 open_status='XF:11ID-PPS{Sh:FE}Cmd:Opn-Sts',
-                 close='XF:11ID-PPS{Sh:FE}Cmd:Cls-Cmd',
-                 close_status='XF:11ID-PPS{Sh:FE}Cmd:Cls-Sts')
+    def open(self):
+        self.open_command.put(1)
 
-foe_sh = Shutter(open='XF:11IDA-PPS{PSh}Cmd:Opn-Cmd',
-                open_status='XF:11IDA-PPS{PSh}Cmd:Opn-Sts',
-                close='XF:11IDA-PPS{PSh}Cmd:Cls-Cmd',
-                close_status='XF:11IDA-PPS{PSh}Cmd:Cls-Sts')
+    def close(self):
+        self.close_command.put(1)
 
+    @property
+    def is_open(self):
+        self._check_sanity()
+        return self.open_status.get()
 
-class FastShutter(EpicsSignal):
+    def _check_sanity(self):
+        consistency = self.open_status.get() ^ self.close_status.get()
+        assert consistency, "Shutter status is not self-consistent"
+
+fe_sh = FourPVShutter('XF:11ID-PPS{Sh:FE}')
+foe_sh = FourPVShutter('XF:11IDA-PPS{FE:Sh}')
+
+class TwoPVShutter(EpicsSignal):
+    "TODO: Make me a Device."
     def open(self):
         self.put(1)
     
     def close(self):
         self.put(0)
 
-fast_sh = FastShutter('XF:11IDB-ES{Zebra}:OUT1_TTL:STA',
-                      write_pv='XF:11IDB-ES{Zebra}:SOFT_IN:B0',
-                      rw=True, name='fast_sh')
-
-
-
-
+# fast_sh = TwoPV('XF:11IDB-ES{Zebra}:OUT1_TTL:STA',
+#                       write_pv='XF:11IDB-ES{Zebra}:SOFT_IN:B0',
+#                       rw=True, name='fast_sh')
