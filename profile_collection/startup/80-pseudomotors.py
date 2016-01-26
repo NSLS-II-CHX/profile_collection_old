@@ -13,15 +13,15 @@ class SamplePositioner(PseudoPositioner):
     -------------
     psamp_x = SamplePositioner(prefix='', name='psamp_x', concurrent=True)
     '''
-    physical_sample_holder = Cpt(EpicsMotor, '...')
-    beamstop = Cpt(EpicsMotor, '...')
-    sample_holder = Cpt(PseudoSingle, '...')
+    physical_sample_holder = Cpt(EpicsMotor, 'XF:11IDB-ES{Dif-Ax:XH}Mtr')
+    beamstop_x = Cpt(EpicsMotor, 'XF:11IDB-OP{BS:Samp-Ax:X}Mtr')
+    sample_holder = Cpt(PseudoSingle, limits=(0, 0))
 
     def forward(self, pos):
         "pos is a self.PseudoPosition"
         delta = pos - pos.sample_holder.pos
         return self.RealPosition(physical_sample_holder=pos.sample_holder,
-                                 beamstop=self.beamstop.position - delta)
+                                 beamstop_x=self.beamstop_x.position - delta)
 
     def reverse(self, pos):
         "pos is self.RealPosition"

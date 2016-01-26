@@ -28,25 +28,12 @@ from bluesky.global_state import (resume, abort, stop, panic,
 
 # hacking on the logbook!
 
-from pyOlog import SimpleOlogClient
-client = SimpleOlogClient()
 from pprint import pformat, pprint
 from bluesky.callbacks import CallbackBase
-from IPython import get_ipython
-class OlogCallback(CallbackBase):
-    def start(self, doc):
-        commands = list(get_ipython().history_manager.get_range())
-        document_content = ('%s: %s\n\n'
-                            'RunStart Document\n'
-                            '-----------------\n'
-                            '%s' % (doc['scan_id'],
-                                    commands[-1][2],
-                                    pformat(doc)))
-        olog_status = client.log(document_content, logbooks='Data Acquisition')
-        print('client.log returned %s' % olog_status)
-#dscan.default_sub_factories['all'].append(OlogCallback())
-gs.RE.subscribe('start', OlogCallback())
-gs.RE.logbook = None
+from bluesky.callbacks.olog import OlogCallback
+
+olog_cb = OlogCallback('Data Acquisition')
+gs.RE.subscribe('start', olog_cb)
 
 
 import os
@@ -86,7 +73,10 @@ class LiveSpecFile(CallbackBase):
         last_command = last_command.replace(')', ' ')
         last_command = last_command.replace(',', ' ')
         dets = eval(doc['detectors'])
-        self.acquisition_time = dets[0].acquire_time
+        try:
+            self.acquisition_time = dets[0].cam.acquire_time
+        except AttributeError:
+            self.acquisition_time = -1
         # write a blank line between scans
         with open(gs.specpath, 'a') as f:
             f.write('\n\n')
@@ -97,7 +87,7 @@ class LiveSpecFile(CallbackBase):
             f.write('#T %s (Seconds)\n' % self.acquisition_time)
         # write the motor positions
         session_manager = get_session_manager()
-        pos = session_manager.get_positioners()        
+        pos = session_manager.get_positioners()
         positions = [str(v.position) for k, v in sorted(pos.items())]
         with open(gs.specpath, 'a') as f:
             f.write('#P0 {0}\n'.format(' '.join(positions)))

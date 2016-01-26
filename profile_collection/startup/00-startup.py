@@ -15,6 +15,7 @@ from bluesky.scientific_callbacks import plot_peak_stats
 # from chxtools.xfuncs import *
 # from chxtools.plot import plot1
 from bluesky.plans import  *
+import ophyd
 
 
 

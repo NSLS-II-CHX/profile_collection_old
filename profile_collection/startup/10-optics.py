@@ -65,8 +65,7 @@ class XYThetaMotor(XYMotor):
 
 class HorizontalDiffractionMirror(XYMotor):
     "x and y with pitch, which has different read and write PVs"
-    p = FormattedComponent(EpicsSignal, read_pv='{self.prefix}-Ax:P}}E-I', write_pv='{self.prefix}-Ax:P}}E-SP')
-
+    p = FormattedComponent(EpicsSignal, read_pv='{self.prefix}-Ax:P}}E-I', write_pv='{self.prefix}-Ax:P}}E-SP', add_prefix=('read_pv', 'write_pv', 'suffix'))
 
 
 class DCM(Device):
@@ -74,12 +73,17 @@ class DCM(Device):
     b = Cpt(EpicsMotor, '-Ax:B}Mtr')
     r = Cpt(EpicsMotor, '-Ax:R}Mtr')
     x = Cpt(EpicsMotor, '-Ax:X}Mtr')
-    p = Cpt(EpicsMotor, '-Ax:P}Mtr')
     fp = Cpt(EpicsMotor, '-Ax:FP}Mtr')
+    p = Cpt(EpicsMotor, '-Ax:P}Mtr')
 
 
-class DMM(DCM):
-    y = Cpt(EpicsMotor, '-Ax:Y}Mtr')  # DCM does not have one
+class DMM(Device):
+    # en = Cpt(EpicsMotor, '-Ax:Energy}Mtr')
+    b = Cpt(EpicsMotor, '-Ax:B}Mtr')
+    r = Cpt(EpicsMotor, '-Ax:R}Mtr')
+    x = Cpt(EpicsMotor, '-Ax:X}Mtr')
+    y = Cpt(EpicsMotor, '-Ax:Y}Mtr')
+    fp = Cpt(EpicsMotor, '-Ax:FP}Mtr')
 
 
 class Transfocator(Device):
@@ -123,10 +127,10 @@ class Diffractometer(Device):
     xv2 = Cpt(EpicsMotor, '-Ax:XV2}Mtr')
 
 
-diff = Diffractometer('XF:11IDB-ES{Dif')
+diff = Diffractometer('XF:11IDB-ES{Dif', name='diff')
 
 # sample beamstop
-sambst = EpicsMotor('XF:11IDB-OP{BS:Samp')
+sambst = XYMotor('XF:11IDB-OP{BS:Samp', name='sambst')
 
 s1 = MotorCenterAndGap('XF:11IDB-OP{Slt:1', name='s1')
 k1 = Kinoform('XF:11IDB-OP{Lens:1', name='k1')  # upstream
@@ -136,14 +140,15 @@ s2 = MotorCenterAndGap('XF:11IDB-OP{Slt:2', name='s2') #Beam-defining (large JJ)
 pbs = MotorSlits('XF:11IDA-OP{Slt:PB', name='pbs')  # pink beam slits
 flt_y = EpicsMotor('XF:11IDA-OP{Flt:1-Ax:Y}Mtr', name='flt_y')  # filters
 dcm = DCM('XF:11IDA-OP{Mono:DCM', name='dcm')
-dmm = DCM('XF:11IDA-OP{Mono:DMM', name='dmm')
+dmm = DMM('XF:11IDA-OP{Mono:DMM', name='dmm')
 mbs = VirtualMotorSlits('XF:11IDA-OP{Slt:MB', name='mbs')  # Mono-beam Slits
 s4 = MotorCenterAndGap('XF:11IDB-ES{Slt:4-Ax:XGap}Mtr', name='s4')  # temp guard slits
 
 # Diagnostic Manipulators
 foil_y = EpicsMotor('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr', name='foil_y')
-bpm1 = XYMotor('XF:11IDA-BI{Bpm:1-', name='bpm1')
-bpm2 = XYMotor('XF:11IDA-BI{Bpm:2-', name='bpm2')
+# Note inconsistency in capitalization of Bpm/BPM below.
+bpm1 = XYMotor('XF:11IDA-BI{Bpm:1', name='bpm1')
+bpm2 = XYMotor('XF:11IDB-BI{BPM:2', name='bpm2')
 
 w1 = XYMotor('XF:11IDB-OP{Win:1', name='w1')  # window positioners
 hdm = HorizontalDiffractionMirror('XF:11IDA-OP{Mir:HDM', name='hdm')

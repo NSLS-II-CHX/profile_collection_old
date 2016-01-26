@@ -1,6 +1,8 @@
 from ophyd import (ProsilicaDetector, SingleTrigger, TIFFPlugin,
-                   ImagePlugin, StatsPlugin, DetectorBase)
-from ophyd.areadetector.filestore_mixins import FileStoreTIFFIterativeWrite
+                   ImagePlugin, StatsPlugin, DetectorBase, HDF5Plugin,
+                   AreaDetector)
+from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
+                                                 FileStoreHDF5IterativeWrite)
 from ophyd import Component as Cpt
 
 
@@ -13,7 +15,8 @@ class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
 
 
 class StandardProsilica(SingleTrigger, ProsilicaDetector):
-    tiff = Cpt(TIFFPluginWithFileStore, suffix='TIFF1:',
+    tiff = Cpt(TIFFPluginWithFileStore,
+               suffix='TIFF1:',
                write_path_template='/XF11ID/data/')
     image = Cpt(ImagePlugin, 'image1:')
     stats1 = Cpt(StatsPlugin, 'Stats1:')
@@ -23,8 +26,15 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
     stats5 = Cpt(StatsPlugin, 'Stats5:')
 
 
-class EigerDetector(SingleTrigger, AreaDetector):
+class HDF5PluginWithFileStore(HDF5Plugin, FileStoreHDF5IterativeWrite):
     pass
+
+
+class Eiger(SingleTrigger, AreaDetector):
+    pass
+    # hdf5 = Cpt(HDF5PluginWithFileStore,
+    #            suffix='HDF51:', 
+    #           write_path_template='/XF11ID/data/')
 
 
 xray_eye1 = StandardProsilica('XF:11IDA-BI{Bpm:1-Cam:1}', name='xray_eye1')
@@ -37,3 +47,15 @@ fs_wbs = StandardProsilica('XF:11IDA-BI{BS:WB-Cam:1}', name='fs_wbs')
 dcm_cam = StandardProsilica('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam')
 fs_pbs = StandardProsilica('XF:11IDA-BI{BS:PB-Cam:1}', name='fs_pbs')
 # elm = Elm('XF:11IDA-BI{AH401B}AH401B:')
+
+all_standard_pros = [xray_eye1, xray_eye3, fs1, fs2, fs_wbs, dcm_cam, fs_pbs]
+for camera in all_standard_pros:
+    camera.read_attrs = ['tiff']
+    camera.tiff.read_attrs = []  # leaving just the 'image'
+
+
+# XF:11IDB-ES{Det:Eig1M}cam1:ThresholdEnergy_RBV
+
+
+# eiger = Eiger('XF:11IDB-ES{Det:Eig1M}', name='eiger')
+# eiger_4M = Eiger('XF:11IDB-BI{Det:Eig4M}', name='eiger_4M')
