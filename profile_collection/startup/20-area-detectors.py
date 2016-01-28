@@ -36,7 +36,7 @@ class Eiger(SingleTrigger, AreaDetector):
     #            suffix='HDF51:', 
     #           write_path_template='/XF11ID/data/')
 
-
+## This renaming should be reversed: no correspondance between CSS screens, PV names and ophyd....
 xray_eye1 = StandardProsilica('XF:11IDA-BI{Bpm:1-Cam:1}', name='xray_eye1')
 # These two are not installed 21 Jan 2016.
 # xray_eye2 = StandardProsilica('XF:11IDA-BI{?????}', name='xray_eye2')
@@ -50,8 +50,13 @@ fs_pbs = StandardProsilica('XF:11IDA-BI{BS:PB-Cam:1}', name='fs_pbs')
 
 all_standard_pros = [xray_eye1, xray_eye3, fs1, fs2, fs_wbs, dcm_cam, fs_pbs]
 for camera in all_standard_pros:
-    camera.read_attrs = ['tiff']
+    camera.read_attrs = ['tiff', 'stats1', 'stats2','stats3','stats4','stats5']
     camera.tiff.read_attrs = []  # leaving just the 'image'
+    camera.stats1.read_attrs = ['total']
+    camera.stats2.read_attrs = ['total']
+    camera.stats3.read_attrs = ['total']
+    camera.stats4.read_attrs = ['total']
+    camera.stats5.read_attrs = ['total']
 
 
 # XF:11IDB-ES{Det:Eig1M}cam1:ThresholdEnergy_RBV
