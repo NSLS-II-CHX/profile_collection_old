@@ -39,6 +39,8 @@ gs.RE.subscribe('start', olog_cb)
 import os
 from datetime import datetime
 
+def get_epics_motors():
+    return {name: obj for name, obj in globals().items() if isinstance(obj, (EpicsMotor))}
 def write_spec_header(path, doc):
     # write a new spec file header!
     #F /home/xf11id/specfiles/test.spec
@@ -46,8 +48,9 @@ def write_spec_header(path, doc):
     #D 2015-12-03 16:48:58.341809
     #C xf11id  User = xf11id
     #O [list of all motors, 10 per line]
-    session_manager = get_session_manager()
-    pos = session_manager.get_positioners()
+    # session_manager = get_session_manager()
+    pos = get_epics_motors()
+    # pos = session_manager.get_positioners()
     spec_header = [
         '#F %s' % path,
         '#E %s' % int(doc['time']),
@@ -74,7 +77,7 @@ class LiveSpecFile(CallbackBase):
         last_command = last_command.replace(',', ' ')
         dets = eval(doc['detectors'])
         try:
-            self.acquisition_time = dets[0].cam.acquire_time
+            self.acquisition_time = dets[0].cam.acquire_time.value
         except AttributeError:
             self.acquisition_time = -1
         # write a blank line between scans
@@ -86,8 +89,8 @@ class LiveSpecFile(CallbackBase):
             f.write('#D %s\n' % datetime.fromtimestamp(doc['time']))
             f.write('#T %s (Seconds)\n' % self.acquisition_time)
         # write the motor positions
-        session_manager = get_session_manager()
-        pos = session_manager.get_positioners()
+        # session_manager = get_session_manager()
+        pos = get_epics_motors()
         positions = [str(v.position) for k, v in sorted(pos.items())]
         with open(gs.specpath, 'a') as f:
             f.write('#P0 {0}\n'.format(' '.join(positions)))
@@ -99,10 +102,11 @@ class LiveSpecFile(CallbackBase):
                 f.write('#M%s %s %s\n' % (idx, name, str(positioner.position)))
         print("RunStart document received in LiveSpecFile")
         #raise
-        self.motorname = eval(doc['motor']).name
+        self.motorname = eval(doc['motor']).name + '_user_readback'
     
     def descriptor(self, doc):
         keys = sorted(list(doc['data_keys'].keys()))
+
         keys.remove(self.motorname)
         keys.insert(0, 'Seconds')
         keys.insert(0, 'Epoch')
