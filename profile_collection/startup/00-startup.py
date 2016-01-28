@@ -18,5 +18,4 @@ from bluesky.plans import  *
 import ophyd
 
 
-
-import chx_attfuncs as atten
+from chxtools import attfuncs as atten
