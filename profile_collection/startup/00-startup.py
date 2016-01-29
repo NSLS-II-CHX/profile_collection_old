@@ -10,6 +10,11 @@ from epics import caput, caget
 
 # connect olog
 # gs.RE.logbook = olog_wrapper(olog_client, ['Data Acquisition'])
+
+# ophyd expects to find 'logbook' in the IPython namespace
+from pyOlog import SimpleOlogClient
+logbook = SimpleOlogClient()
+
 RE=gs.RE
 from bluesky.scientific_callbacks import plot_peak_stats
 # from chxtools.xfuncs import *
