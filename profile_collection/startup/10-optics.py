@@ -142,7 +142,7 @@ flt_y = EpicsMotor('XF:11IDA-OP{Flt:1-Ax:Y}Mtr', name='flt_y')  # filters
 dcm = DCM('XF:11IDA-OP{Mono:DCM', name='dcm')
 dmm = DMM('XF:11IDA-OP{Mono:DMM', name='dmm')
 mbs = VirtualMotorSlits('XF:11IDA-OP{Slt:MB', name='mbs')  # Mono-beam Slits
-s4 = MotorCenterAndGap('XF:11IDB-ES{Slt:4-Ax:XGap}Mtr', name='s4')  # temp guard slits
+s4 = MotorCenterAndGap('XF:11IDB-ES{Slt:4', name='s4')  # temp guard slits
 
 # Diagnostic Manipulators
 foil_y = EpicsMotor('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr', name='foil_y')
