@@ -23,7 +23,7 @@ class SamplePositioner(PseudoPositioner):
         return self.RealPosition(physical_sample_holder=pos.sample_holder,
                                  beamstop_x=self.beamstop_x.position - delta)
 
-    def reverse(self, pos):
+    def inverse(self, pos):
         "pos is self.RealPosition"
         return self.PsuedoPosition(sample_holder=pos.physical_sample_holder)
 
