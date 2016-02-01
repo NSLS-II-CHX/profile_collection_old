@@ -25,7 +25,7 @@ class SamplePositioner(PseudoPositioner):
 
     def inverse(self, pos):
         "pos is self.RealPosition"
-        return self.PsuedoPosition(sample_holder=pos.physical_sample_holder)
+        return self.PseudoPosition(sample_holder=pos.physical_sample_holder)
 
 
 psamp_x = SamplePositioner(prefix='', name='psamp_x', concurrent=True)
