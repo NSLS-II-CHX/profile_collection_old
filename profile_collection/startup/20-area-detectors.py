@@ -1,3 +1,4 @@
+import time as ttime  # tea time
 from ophyd import (ProsilicaDetector, SingleTrigger, TIFFPlugin,
                    ImagePlugin, StatsPlugin, DetectorBase, HDF5Plugin,
                    AreaDetector, EpicsSignal, EpicsSignalRO)
@@ -76,7 +77,13 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
         return super().unstage()
 
 
-class Eiger(SingleTrigger, AreaDetector):
+class EigerBase(AreaDetector):
+    """
+    Eiger, sans any triggering behavior.
+
+    Use EigerSingleTrigger or EigerFastTrigger below.
+    """
+    num_triggers = ADComponent(EpicsSignalWithRBV, 'cam1:NumTriggers')
     file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
                write_path_template='/XF11ID/data/%Y/%m/%d/')
     # cam = Cpt(CamWithFasterShutter, 'cam1:')
@@ -88,25 +95,38 @@ class Eiger(SingleTrigger, AreaDetector):
     stats4 = Cpt(StatsPlugin, 'Stats4:')
     stats5 = Cpt(StatsPlugin, 'Stats5:')
 
+    shutter_mode = ADComponent(EpicsSignalWithRBV, 'cam1:ShutterMode')
 
-class FastShutterTrigger(AreaDetectorCam):
+
+class EigerSingleTrigger(SingleTrigger, EigerBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stage_sigs[self.cam.trigger_mode] = 0
+        # self.stage_sigs[self.shutter_mode] = 1  # 'EPICS PV'
+
+
+class FastShutterTrigger(Device):
+    """This represents the fast trigger *device*.
+    
+    See below, FastTriggerMixin, which defines the trigging logic.
+    """
     auto_shutter_mode = Cpt(EpicsSignal, 'Mode-Sts', write_pv='Mode-Cmd')
     num_images = Cpt(EpicsSignal, 'NumImages-SP')
     exposure_time = Cpt(EpicsSignal, 'ExposureTime-SP')
     acquire_period = Cpt(EpicsSignal, 'AcquirePeriod-SP')
-    acquire = Cpt(EpicsSignal, 'Acquire-Cmd')
+    acquire = Cpt(EpicsSignal, 'Acquire-Cmd', trigger_value=1)
+
+
+class EigerFastTrigger(EigerBase):
+    tr = Cpt(FastShutterTrigger, 'XF:11IDB-ES{Trigger:Eig4M}', add_prefix=())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.stage_sigs = [(self.acquire, 0), # If acquiring, stop
-                           (self.cam.image_mode, 2), # 'External Series' mode
-                          ]
-        # clear parent class subscription
-        self._acquisition_signal.clear_sub(self._acquire_changed)
+        self.stage_sigs[self.cam.trigger_mode] = 3  # 'External Enable' mode
 
-        self._acquisition_signal = self.acquire
-        self._acquisition_signal.subscribe(self._acquire_changed)
-        
+    def trigger(self):
+        self.dispatch('image', ttime.time())
+        return self.tr.trigger()
 
 # test_trig4M = FastShutterTrigger('XF:11IDB-ES{Trigger:Eig4M}', name='test_trig4M')
         
@@ -136,9 +156,15 @@ for camera in all_standard_pros:
 
 # XF:11IDB-ES{Det:Eig1M}cam1:ThresholdEnergy_RBV
 
-
 # eiger = Eiger('XF:11IDB-ES{Det:Eig1M}', name='eiger')
-eiger4m = Eiger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
+
+# Eiger 4M using internal trigger
+eiger4m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
+eiger4m_single.file.read_attrs = []
+eiger4m_single.read_attrs = ['file']
+
+# Eiger 4M using fast trigger assembly
+eiger4m = EigerFastTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
 eiger4m.file.read_attrs = []
 eiger4m.read_attrs = ['file']
 # eiger4m.read_attrs = ['file', 'stats1', 'stats2', 'stats3,' 'stats4, 'stats5']
