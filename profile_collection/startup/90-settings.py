@@ -25,6 +25,6 @@ gs.RE.subscribe('start', print_scanid)
 
 from ophyd.commands import wh_pos, log_pos, mov, movr
 
-from eiger_io.fs_handler import EigerHandler
+from eiger_io.fs_handler import LazyEigerHandler
 from filestore.api import register_handler
-register_handler("AD_EIGER", EigerHandler)
+register_handler("AD_EIGER", LazyEigerHandler)

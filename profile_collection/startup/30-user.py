@@ -57,3 +57,15 @@ def launch_4m():
 	gs.RE(Count([det],1,0))
 
 gs.PLOTMODE = 2
+
+
+def dlup(m,start,stop,nstep):
+	plan = DeltaScanPlan([det],m,start,stop,nstep)
+	plan.subs=[ LiveTable( [m, str(det.stats1.name)+'_'+str(det.stats1.read_attrs[0])]), LivePlot(x=str(m.name)+'_'+m.read_attrs[0], y=str(det.stats1.name)+'_'+str(det.stats1.read_attrs[0]), markersize=10,  marker='o',color='r' ) ]
+	RE(plan)
+
+
+def alup(m,start,stop,nstep):
+	plan = AbsScanPlan([det],m,start,stop,nstep)
+	plan.subs=[ LiveTable( [m, str(det.stats1.name)+'_'+str(det.stats1.read_attrs[0])]), LivePlot(x=str(m.name)+'_'+m.read_attrs[0], y=str(det.stats1.name)+'_'+str(det.stats1.read_attrs[0]), markersize=10,  marker='o',color='r' ) ]
+	RE(plan)

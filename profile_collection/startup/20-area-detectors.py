@@ -1,9 +1,14 @@
 from ophyd import (ProsilicaDetector, SingleTrigger, TIFFPlugin,
                    ImagePlugin, StatsPlugin, DetectorBase, HDF5Plugin,
-                   AreaDetector)
+                   AreaDetector, EpicsSignal, EpicsSignalRO)
+from ophyd.areadetector.cam import AreaDetectorCam
+from ophyd.areadetector.base import ADComponent, EpicsSignalWithRBV
 from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
-                                                 FileStoreHDF5IterativeWrite)
+                                                 FileStoreHDF5IterativeWrite,
+                                                 FileStoreBase, new_short_uid)
 from ophyd import Component as Cpt
+from ophyd.utils import set_and_wait
+import filestore.api as fs
 
 
 class Elm(SingleTrigger, DetectorBase):
@@ -26,15 +31,85 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
     stats5 = Cpt(StatsPlugin, 'Stats5:')
 
 
-class HDF5PluginWithFileStore(HDF5Plugin, FileStoreHDF5IterativeWrite):
-    pass
+class EigerSimulatedFilePlugin(Device, FileStoreBase):
+    sequence_id = ADComponent(EpicsSignalRO, 'SequenceId')
+    file_path = ADComponent(EpicsSignalWithRBV, 'FilePath', string=True)
+    file_write_name_pattern = ADComponent(EpicsSignalWithRBV, 'FWNamePattern',
+                                          string=True)
+    file_write_images_per_file = ADComponent(EpicsSignalWithRBV, 'FWNImagesPerFile')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._datum_kwargs_map = dict()  # store kwargs for each uid
+
+    def stage(self):
+        res_uid = new_short_uid()
+        set_and_wait(self.file_write_name_pattern, '{}_$id'.format(res_uid))
+        super().stage()
+        fn = os.path.join(self.file_path.get(), res_uid)
+        res_kwargs = {'frame_per_point': self.get_frames_per_point()}
+        logger.debug("Inserting resource with filename %s", fn)
+        self._resource = fs.insert_resource('AD_EIGER', fn, res_kwargs)
+
+    def get_frames_per_point(self):
+        # TODO Get this from the fast trigger.
+        return 1  # this is a placeholder, a lie
+
+    def generate_datum(self, key, timestamp):
+        # This code is similar (not identical) to FileStoreBulkWrite.
+        "Stash kwargs for each datum, to be used below by unstage."
+        uid = super().generate_datum(key, timestamp)
+        i = next(self._point_counter)
+        seq_id = 1 + int(self.sequence_id.get())  # det writes to the NEXT one
+        self._datum_kwargs_map[uid] = {'seq_id': seq_id}
+        # (don't insert, obviously)
+        return uid
+
+    def unstage(self):
+        # This code is indentical to FileStoreBulkWrite -- refactor it out
+        "Insert all datums at the end."
+        for readings in self._datum_uids.values():
+            for reading in readings:
+                uid = reading['value']
+                kwargs = self._datum_kwargs_map[uid]
+                fs.insert_datum(self._resource, uid, kwargs)
+        return super().unstage()
 
 
 class Eiger(SingleTrigger, AreaDetector):
-    pass
-    # hdf5 = Cpt(HDF5PluginWithFileStore,
-    #            suffix='HDF51:', 
-    #           write_path_template='/XF11ID/data/')
+    file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
+               write_path_template='/XF11ID/data/%Y/%m/%d/')
+    # cam = Cpt(CamWithFasterShutter, 'cam1:')
+    # None of these are needed?
+    image = Cpt(ImagePlugin, 'image1:')
+    stats1 = Cpt(StatsPlugin, 'Stats1:')
+    stats2 = Cpt(StatsPlugin, 'Stats2:')
+    stats3 = Cpt(StatsPlugin, 'Stats3:')
+    stats4 = Cpt(StatsPlugin, 'Stats4:')
+    stats5 = Cpt(StatsPlugin, 'Stats5:')
+
+
+class FastShutterTrigger(AreaDetectorCam):
+    auto_shutter_mode = Cpt(EpicsSignal, 'Mode-Sts', write_pv='Mode-Cmd')
+    num_images = Cpt(EpicsSignal, 'NumImages-SP')
+    exposure_time = Cpt(EpicsSignal, 'ExposureTime-SP')
+    acquire_period = Cpt(EpicsSignal, 'AcquirePeriod-SP')
+    acquire = Cpt(EpicsSignal, 'Acquire-Cmd')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stage_sigs = [(self.acquire, 0), # If acquiring, stop
+                           (self.cam.image_mode, 2), # 'External Series' mode
+                          ]
+        # clear parent class subscription
+        self._acquisition_signal.clear_sub(self._acquire_changed)
+
+        self._acquisition_signal = self.acquire
+        self._acquisition_signal.subscribe(self._acquire_changed)
+        
+
+# test_trig4M = FastShutterTrigger('XF:11IDB-ES{Trigger:Eig4M}', name='test_trig4M')
+        
 
 ## This renaming should be reversed: no correspondance between CSS screens, PV names and ophyd....
 xray_eye1 = StandardProsilica('XF:11IDA-BI{Bpm:1-Cam:1}', name='xray_eye1')
@@ -63,4 +138,19 @@ for camera in all_standard_pros:
 
 
 # eiger = Eiger('XF:11IDB-ES{Det:Eig1M}', name='eiger')
-# eiger_4M = Eiger('XF:11IDB-BI{Det:Eig4M}', name='eiger_4M')
+eiger4m = Eiger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
+eiger4m.file.read_attrs = []
+eiger4m.read_attrs = ['file']
+# eiger4m.read_attrs = ['file', 'stats1', 'stats2', 'stats3,' 'stats4, 'stats5']
+# eiger4m.stats1.read_attrs = ['total']
+# eiger4m.stats2.read_attrs = ['total']
+# eiger4m.stats3.read_attrs = ['total']
+# eiger4m.stats4.read_attrs = ['total']
+# eiger4m.stats5.read_attrs = ['total']
+
+
+# Comment this out to suppress deluge of logging messages.
+import logging
+logging.basicConfig(level=logging.DEBUG)
+import ophyd.areadetector.filestore_mixins
+ophyd.areadetector.filestore_mixins.logger.setLevel(logging.DEBUG)
