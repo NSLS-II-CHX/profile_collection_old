@@ -102,7 +102,7 @@ class EigerSingleTrigger(SingleTrigger, EigerBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage_sigs[self.cam.trigger_mode] = 0
-        # self.stage_sigs[self.shutter_mode] = 1  # 'EPICS PV'
+        self.stage_sigs[self.shutter_mode] = 1  # 'EPICS PV'
 
 
 class FastShutterTrigger(Device):
@@ -123,6 +123,7 @@ class EigerFastTrigger(EigerBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage_sigs[self.cam.trigger_mode] = 3  # 'External Enable' mode
+        self.stage_sigs[self.shutter_mode] = 0  # 'EPICS PV'
 
     def trigger(self):
         self.dispatch('image', ttime.time())
