@@ -108,6 +108,8 @@ class Kinoform(Device):
 
 
 class Diffractometer(Device):
+    
+    Del= Cpt( EpicsMotor, '-Ax:Del}Mtr')
     gam = Cpt(EpicsMotor, '-Ax:Gam}Mtr')
     om = Cpt(EpicsMotor, '-Ax:Om}Mtr')
     phi = Cpt(EpicsMotor, '-Ax:Ph}Mtr')
@@ -125,7 +127,6 @@ class Diffractometer(Device):
     yv = Cpt(EpicsMotor, '-Ax:YV}Mtr')
     zv = Cpt(EpicsMotor, '-Ax:ZV}Mtr')
     xv2 = Cpt(EpicsMotor, '-Ax:XV2}Mtr')
-
 
 diff = Diffractometer('XF:11IDB-ES{Dif', name='diff')
 
