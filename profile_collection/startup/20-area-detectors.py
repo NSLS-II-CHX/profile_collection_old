@@ -21,9 +21,9 @@ class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
 
 
 class StandardProsilica(SingleTrigger, ProsilicaDetector):
-    tiff = Cpt(TIFFPluginWithFileStore,
-               suffix='TIFF1:',
-               write_path_template='/XF11ID/data/')
+    # tiff = Cpt(TIFFPluginWithFileStore,
+    #           suffix='TIFF1:',
+    #           write_path_template='/XF11ID/data/')
     image = Cpt(ImagePlugin, 'image1:')
     stats1 = Cpt(StatsPlugin, 'Stats1:')
     stats2 = Cpt(StatsPlugin, 'Stats2:')
@@ -146,38 +146,54 @@ fs_pbs = StandardProsilica('XF:11IDA-BI{BS:PB-Cam:1}', name='fs_pbs')
 
 all_standard_pros = [xray_eye1, xray_eye3, fs1, fs2, fs_wbs, dcm_cam, fs_pbs]
 for camera in all_standard_pros:
-    camera.read_attrs = ['tiff', 'stats1', 'stats2','stats3','stats4','stats5']
-    camera.tiff.read_attrs = []  # leaving just the 'image'
+    camera.read_attrs = ['stats1', 'stats2','stats3','stats4','stats5']
+    # camera.tiff.read_attrs = []  # leaving just the 'image'
     camera.stats1.read_attrs = ['total']
     camera.stats2.read_attrs = ['total']
     camera.stats3.read_attrs = ['total']
     camera.stats4.read_attrs = ['total']
     camera.stats5.read_attrs = ['total']
 
-
-# XF:11IDB-ES{Det:Eig1M}cam1:ThresholdEnergy_RBV
-
-# eiger = Eiger('XF:11IDB-ES{Det:Eig1M}', name='eiger')
+# Eiger 1M using internal trigger
+eiger1m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig1M}', name='eiger1m_single')
+eiger1m_single.file.read_attrs = []
+eiger1m_single.read_attrs = ['file','stats1']
+eiger1m_single.stats1.read_attrs = ['total']
 
 # Eiger 4M using internal trigger
-eiger4m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
+eiger4m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m_single')
 eiger4m_single.file.read_attrs = []
-eiger4m_single.read_attrs = ['file']
+eiger4m_single.read_attrs = ['file','stats1']
+eiger4m_single.stats1.read_attrs = ['total']
+
+
+# Eiger 1M using fast trigger assembly
+eiger1m = EigerFastTrigger('XF:11IDB-ES{Det:Eig1M}', name='eiger1m')
+eiger1m.file.read_attrs = []
+#eiger1m.read_attrs = ['file']
+eiger1m.read_attrs = ['file','stats1', 'stats2', 'stats3', 'stats4','stats5']
+eiger1m.stats1.read_attrs = ['total']
+eiger1m.stats2.read_attrs = ['total']
+eiger1m.stats3.read_attrs = ['total']
+eiger1m.stats4.read_attrs = ['total']
+eiger1m.stats5.read_attrs = ['total']
+
 
 # Eiger 4M using fast trigger assembly
 eiger4m = EigerFastTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
-eiger4m.file.read_attrs = []
-eiger4m.read_attrs = ['file']
-# eiger4m.read_attrs = ['file', 'stats1', 'stats2', 'stats3,' 'stats4, 'stats5']
-# eiger4m.stats1.read_attrs = ['total']
-# eiger4m.stats2.read_attrs = ['total']
-# eiger4m.stats3.read_attrs = ['total']
-# eiger4m.stats4.read_attrs = ['total']
-# eiger4m.stats5.read_attrs = ['total']
+#eiger4m.file.read_attrs = []
+#eiger4m.read_attrs = ['file', 'stats1']
+eiger4m.read_attrs = ['file', 'stats1', 'stats2', 'stats3', 'stats4','stats5']
+#eiger4m.read_attrs = []
+eiger4m.stats1.read_attrs = ['total']
+eiger4m.stats2.read_attrs = ['total']
+eiger4m.stats3.read_attrs = ['total']
+eiger4m.stats4.read_attrs = ['total']
+eiger4m.stats5.read_attrs = ['total']
 
 
 # Comment this out to suppress deluge of logging messages.
-import logging
-logging.basicConfig(level=logging.DEBUG)
-import ophyd.areadetector.filestore_mixins
-ophyd.areadetector.filestore_mixins.logger.setLevel(logging.DEBUG)
+#import logging
+#logging.basicConfig(level=logging.DEBUG)
+#import ophyd.areadetector.filestore_mixins
+#ophyd.areadetector.filestore_mixins.logger.setLevel(logging.DEBUG)
