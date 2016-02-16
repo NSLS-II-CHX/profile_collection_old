@@ -22,6 +22,16 @@ class ReversedEpicsMotor(EpicsMotor):
 bst_y = ReversedEpicsMotor('XF:11IDB-ES{Dif-Ax:YV}Mtr', name = 'bst_y')
 #bst_rot = diff_om
 
+
+def change_motor_name( device):
+    for k in device.signal_names:
+        if hasattr( getattr(device, k), 'user_readback'):
+            getattr(device, k).user_readback.name = getattr(device, k).name
+
+
+change_motor_name(diff)
+
+
 # Alias motors
 bst_x = diff.xv2
 sam_x = diff.xh
@@ -31,24 +41,32 @@ sam_y = diff.yh
 #sam_chi = diff_chh
 sam_pitch = diff.phh
 
-def att(num):
-	if num == 0:
-		mov(bst_x,18.)
-		mov(bst_y,.17)
-	elif num == 1:
-		mov(bst_x,25.)
-		mov(bst_y,.17)
-	elif num == 2:
-		mov(bst_x,31.)
-		mov(bst_y,.17)
-
 def W_in():
-	mov(bst_x,-12.19)
-	mov(bst_y,-.1298)
+	mov(diff.zv,0.20014)
+	mov(diff.xv2,9.25)
+	mov(diff.yv,1.36)
 
-def W_saxs():
-	mov(bst_x,-12.2005)
-	mov(bst_y,-.97985)
+def Pt_in():
+   mov(diff.zv,0.20014)
+   #mov(diff.xv2,-4.74)
+   mov(diff.xv2,-4.7692)
+   mov(diff.yv,.08)
+
+def bst_out():
+	mov(diff.xv2,-20.)
+
+def sample_mid():
+	mov(diff.xh,.12)
+	mov(diff.yh,.2)
+
+def sample_top():
+	mov(diff.xh,.12)
+	mov(diff.yh,-4.8)
+
+def sample_bot():
+	mov(diff.xh,.12)
+	mov(diff.yh,5.2)
+
 
 
 def launch_4m():
@@ -69,3 +87,7 @@ def alup(m,start,stop,nstep):
 	plan = AbsScanPlan([det],m,start,stop,nstep)
 	plan.subs=[ LiveTable( [m, str(det.stats1.name)+'_'+str(det.stats1.read_attrs[0])]), LivePlot(x=str(m.name)+'_'+m.read_attrs[0], y=str(det.stats1.name)+'_'+str(det.stats1.read_attrs[0]), markersize=10,  marker='o',color='r' ) ]
 	RE(plan)
+
+
+
+#diff.xh.user_readback.name = 'diff_xh'
