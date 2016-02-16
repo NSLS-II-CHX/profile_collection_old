@@ -118,12 +118,13 @@ class FastShutterTrigger(Device):
 
 
 class EigerFastTrigger(EigerBase):
-    tr = Cpt(FastShutterTrigger, 'XF:11IDB-ES{Trigger:Eig4M}', add_prefix=())
+    tr = Cpt(FastShutterTrigger, '')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stage_sigs[self.cam.trigger_mode] = 3  # 'External Enable' mode
         self.stage_sigs[self.shutter_mode] = 0  # 'EPICS PV'
+        self.stage_sigs[self.tr.auto_shutter_mode] = 1 # 'Enable'
 
     def trigger(self):
         self.dispatch('image', ttime.time())
