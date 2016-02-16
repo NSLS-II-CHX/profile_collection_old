@@ -85,7 +85,7 @@ c.InteractiveShellApp.extensions = ['pyOlog.cli.ipy']
 
 # Create a massive crash report when IPython encounters what may be an internal
 # error.  The default is to append a short message to the usual traceback
-# c.TerminalIPythonApp.verbose_crash = False
+c.TerminalIPythonApp.verbose_crash = True
 
 # Run the module as a script.
 # c.TerminalIPythonApp.module_to_run = ''
@@ -221,7 +221,7 @@ c.TerminalInteractiveShell.show_rewritten_input = True
 # it is not applied if there are no more arguments on the line, and '2' for
 # 'full' autocall, where all callable objects are automatically called (even if
 # no arguments are present).
-c.TerminalInteractiveShell.autocall = 2
+c.TerminalInteractiveShell.autocall = 0 
 
 # Number of lines of your screen, used to control printing of very long strings.
 # Strings longer than this number of lines will be sent through a pager instead

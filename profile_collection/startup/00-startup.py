@@ -19,8 +19,13 @@ RE=gs.RE
 from bluesky.scientific_callbacks import plot_peak_stats
 # from chxtools.xfuncs import *
 # from chxtools.plot import plot1
+
 from bluesky.plans import  *
+
 import ophyd
 
 
-from chxtools import attfuncs as atten
+
+
+from chxtools import attfuncs as att
+from chxtools import xfuncs as xf
