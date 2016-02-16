@@ -42,7 +42,7 @@ class FourPVShutter(Device):
         assert consistency, "Shutter status is not self-consistent"
 
 fe_sh = FourPVShutter('XF:11ID-PPS{Sh:FE}')
-foe_sh = FourPVShutter('XF:11IDA-PPS{FE:Sh}')
+foe_sh = FourPVShutter('XF:11IDA-PPS{PSh}')
 
 class TwoPVShutter(EpicsSignal):
     "TODO: Make me a Device."
