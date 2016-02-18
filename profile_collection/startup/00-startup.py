@@ -1,3 +1,6 @@
+# import ophyd
+# ophyd.commands.setup_ophyd()
+
 import logging
 from bluesky.standard_config import *  # gs, etc.
 import matplotlib.pyplot as plt
@@ -29,3 +32,5 @@ import ophyd
 
 from chxtools import attfuncs as att
 from chxtools import xfuncs as xf
+from chxtools.bpm_stability import bpm_read
+#from chxtools import bpm_stability as bpmst
