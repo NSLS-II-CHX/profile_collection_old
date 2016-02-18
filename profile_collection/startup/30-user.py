@@ -30,7 +30,8 @@ def change_motor_name( device):
 
 
 change_motor_name(diff)
-
+change_motor_name(bpm2)
+change_motor_name(mbs)
 
 # Alias motors
 bst_x = diff.xv2
