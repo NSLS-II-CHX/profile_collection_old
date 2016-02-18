@@ -136,7 +136,7 @@ class EigerFastTrigger(EigerBase):
 ## This renaming should be reversed: no correspondance between CSS screens, PV names and ophyd....
 xray_eye1 = StandardProsilica('XF:11IDA-BI{Bpm:1-Cam:1}', name='xray_eye1')
 # These two are not installed 21 Jan 2016.
-# xray_eye2 = StandardProsilica('XF:11IDA-BI{?????}', name='xray_eye2')
+xray_eye2 = StandardProsilica('XF:11IDB-BI{Mon:1-Cam:1}', name='xray_eye2')
 xray_eye3 = StandardProsilica('XF:11IDB-BI{Cam:08}', name='xray_eye3')
 fs1 = StandardProsilica('XF:11IDA-BI{FS:1-Cam:1}', name='fs1')
 fs2 = StandardProsilica('XF:11IDA-BI{FS:2-Cam:1}', name='fs2')
