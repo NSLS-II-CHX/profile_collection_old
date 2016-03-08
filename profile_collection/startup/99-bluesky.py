@@ -43,16 +43,45 @@ def get_epics_motors():
     return {name: obj for name, obj in globals().items() if isinstance(obj, (EpicsMotor))}
 
 
-gs.specpath = os.path.expanduser('~/specfiles/test4.spec')
+gs.specpath = os.path.expanduser('/home/xf11id/specfiles/spec0.spec')
 #live_specfile_callback = LiveSpecFile()
 #gs.RE.subscribe('all', live_specfile_callback)
 
 
+from databroker import DataBroker as db
+
+#def print_scan_id(name,doc):
+#    print(db[-1]['scan_id'])
+#RE.subscribe('stop', print_scan_id)
+
+
+
+from bluesky.callbacks import CallbackBase
+
+
+
+class print_scan_id(CallbackBase):
+    def start(self, doc):
+        self._scan_id = doc['scan_id']
+
+    def stop(self, doc):
+        print("The scan ID is: %s" %self._scan_id)
+RE.subscribe('all', print_scan_id())
+
+
+#RE.subscribe('stop', Whatever())
+
+#RE.subscribe('all', Whatever())
+
+#wh = Whatever()
+#RE.subscribe('start', wh)
+#RE.subscribe('stop', wh)
 
 
 from bluesky.callbacks.core import LiveSpecFile
 from bluesky.spec_api import ascan, dscan, ct  # this may already be in your profile
-spec_cb = LiveSpecFile('/home/xf11id/specfiles/test4.spec')
+spec_cb = LiveSpecFile('/home/xf11id/specfiles/spec0.spec')
+
 for spec_scan in [ascan, dscan, ct]:
     #    Route all documents to the spec callback.
     spec_scan.subs['all'].append(spec_cb)

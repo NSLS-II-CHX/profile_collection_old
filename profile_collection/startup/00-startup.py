@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 plt.ion()
 from bluesky import qt_kicker
 qt_kicker.install_qt_kicker()
-from databroker import DataBroker as db, get_events, get_images, get_table
+from databroker import DataBroker as db, get_events, get_images, get_table, get_fields, restream, process
 
 from epics import caput, caget
 

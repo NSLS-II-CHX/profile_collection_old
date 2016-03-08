@@ -7,7 +7,7 @@ from ophyd.areadetector.base import ADComponent, EpicsSignalWithRBV
 from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
                                                  FileStoreHDF5IterativeWrite,
                                                  FileStoreBase, new_short_uid)
-from ophyd import Component as Cpt
+from ophyd import Component as Cpt, Signal
 from ophyd.utils import set_and_wait
 import filestore.api as fs
 
@@ -32,12 +32,19 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
     stats5 = Cpt(StatsPlugin, 'Stats5:')
 
 
+class StandardProsilicaWithTIFF(StandardProsilica):
+    tiff = Cpt(TIFFPluginWithFileStore,
+               suffix='TIFF1:',
+               write_path_template='/XF11ID/data/%Y/%m/%d/')
+
+
 class EigerSimulatedFilePlugin(Device, FileStoreBase):
     sequence_id = ADComponent(EpicsSignalRO, 'SequenceId')
     file_path = ADComponent(EpicsSignalWithRBV, 'FilePath', string=True)
     file_write_name_pattern = ADComponent(EpicsSignalWithRBV, 'FWNamePattern',
                                           string=True)
     file_write_images_per_file = ADComponent(EpicsSignalWithRBV, 'FWNImagesPerFile')
+    current_run_start_uid = Cpt(Signal, value='', add_prefix=())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -45,6 +52,8 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
 
     def stage(self):
         res_uid = new_short_uid()
+        write_path = datetime.now().strftime(self.write_path_template)
+        set_and_wait(self.file_path, write_path)
         set_and_wait(self.file_write_name_pattern, '{}_$id'.format(res_uid))
         super().stage()
         fn = os.path.join(self.file_path.get(), res_uid)
@@ -86,8 +95,11 @@ class EigerBase(AreaDetector):
     num_triggers = ADComponent(EpicsSignalWithRBV, 'cam1:NumTriggers')
     file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
                write_path_template='/XF11ID/data/%Y/%m/%d/')
-    # cam = Cpt(CamWithFasterShutter, 'cam1:')
-    # None of these are needed?
+    beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
+    beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
+    wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
+    det_distance = ADComponent(EpicsSignalWithRBV, 'cam1:DetDist')
+    det_distance = ADComponent(EpicsSignalWithRBV, 'cam1:DetDist')
     image = Cpt(ImagePlugin, 'image1:')
     stats1 = Cpt(StatsPlugin, 'Stats1:')
     stats2 = Cpt(StatsPlugin, 'Stats2:')
@@ -103,6 +115,7 @@ class EigerSingleTrigger(SingleTrigger, EigerBase):
         super().__init__(*args, **kwargs)
         self.stage_sigs[self.cam.trigger_mode] = 0
         self.stage_sigs[self.shutter_mode] = 1  # 'EPICS PV'
+        self.stage_sigs.update({self.num_triggers: 1})
 
 
 class FastShutterTrigger(Device):
@@ -135,9 +148,11 @@ class EigerFastTrigger(EigerBase):
 
 ## This renaming should be reversed: no correspondance between CSS screens, PV names and ophyd....
 xray_eye1 = StandardProsilica('XF:11IDA-BI{Bpm:1-Cam:1}', name='xray_eye1')
-# These two are not installed 21 Jan 2016.
 xray_eye2 = StandardProsilica('XF:11IDB-BI{Mon:1-Cam:1}', name='xray_eye2')
 xray_eye3 = StandardProsilica('XF:11IDB-BI{Cam:08}', name='xray_eye3')
+xray_eye1_writing = StandardProsilicaWithTIFF('XF:11IDA-BI{Bpm:1-Cam:1}', name='xray_eye1')
+xray_eye2_writing = StandardProsilicaWithTIFF('XF:11IDB-BI{Mon:1-Cam:1}', name='xray_eye2')
+xray_eye3_writing = StandardProsilicaWithTIFF('XF:11IDB-BI{Cam:08}', name='xray_eye3')
 fs1 = StandardProsilica('XF:11IDA-BI{FS:1-Cam:1}', name='fs1')
 fs2 = StandardProsilica('XF:11IDA-BI{FS:2-Cam:1}', name='fs2')
 fs_wbs = StandardProsilica('XF:11IDA-BI{BS:WB-Cam:1}', name='fs_wbs')
@@ -145,7 +160,8 @@ dcm_cam = StandardProsilica('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam')
 fs_pbs = StandardProsilica('XF:11IDA-BI{BS:PB-Cam:1}', name='fs_pbs')
 # elm = Elm('XF:11IDA-BI{AH401B}AH401B:')
 
-all_standard_pros = [xray_eye1, xray_eye3, fs1, fs2, fs_wbs, dcm_cam, fs_pbs]
+all_standard_pros = [xray_eye1, xray_eye2, xray_eye3, xray_eye1_writing, xray_eye2_writing,
+                     xray_eye3_writing, fs1, fs2, fs_wbs, dcm_cam, fs_pbs]
 for camera in all_standard_pros:
     camera.read_attrs = ['stats1', 'stats2','stats3','stats4','stats5']
     # camera.tiff.read_attrs = []  # leaving just the 'image'
@@ -155,14 +171,20 @@ for camera in all_standard_pros:
     camera.stats4.read_attrs = ['total']
     camera.stats5.read_attrs = ['total']
 
+for camera in [xray_eye1_writing, xray_eye2_writing, xray_eye3_writing]:
+    camera.read_attrs.append('tiff')
+    camera.tiff.read_attrs = []
+
 # Eiger 1M using internal trigger
 eiger1m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig1M}', name='eiger1m_single')
 eiger1m_single.file.read_attrs = []
 eiger1m_single.read_attrs = ['file','stats1']
 eiger1m_single.stats1.read_attrs = ['total']
+eiger1m_single.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance']
 
 # Eiger 4M using internal trigger
 eiger4m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m_single')
+eiger4m_single.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance']
 eiger4m_single.file.read_attrs = []
 eiger4m_single.read_attrs = ['file','stats1']
 eiger4m_single.stats1.read_attrs = ['total']
@@ -177,6 +199,7 @@ eiger1m.stats1.read_attrs = ['total']
 eiger1m.stats2.read_attrs = ['total']
 eiger1m.stats3.read_attrs = ['total']
 eiger1m.stats4.read_attrs = ['total']
+eiger1m.stats4.read_attrs = ['total']
 eiger1m.stats5.read_attrs = ['total']
 
 
@@ -185,6 +208,7 @@ eiger4m = EigerFastTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
 #eiger4m.file.read_attrs = []
 #eiger4m.read_attrs = ['file', 'stats1']
 eiger4m.read_attrs = ['file', 'stats1', 'stats2', 'stats3', 'stats4','stats5']
+eiger4m.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance']
 #eiger4m.read_attrs = []
 eiger4m.stats1.read_attrs = ['total']
 eiger4m.stats2.read_attrs = ['total']

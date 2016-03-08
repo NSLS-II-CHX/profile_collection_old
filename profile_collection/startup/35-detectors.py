@@ -13,4 +13,4 @@ class XBpm(Device):
 
 
 xbpm = XBpm('XF:11IDB-BI{XBPM:02}', name='xbpm')
-xbpm.read_attrs = ['x', 'y', 'a', 'b', 'c', 'd']
+xbpm.read_attrs = ['x', 'y', 'ca', 'cb', 'cc', 'cd']

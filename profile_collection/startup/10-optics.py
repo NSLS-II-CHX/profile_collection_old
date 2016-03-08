@@ -16,15 +16,15 @@ class MotorCenterAndGap(Device):
 
 
 class VirtualGap(PVPositioner):
-    setpoint = Cpt(EpicsSignal, 'size')
     readback = Cpt(EpicsSignalRO, 't2.C')
+    setpoint = Cpt(EpicsSignal, 'size')
     done = Cpt(EpicsSignalRO, 'DMOV')
     done_value = 1
 
 
 class VirtualCenter(PVPositioner):
-    setpoint = Cpt(EpicsSignal, 'center')
     readback = Cpt(EpicsSignalRO, 't2.D')
+    setpoint = Cpt(EpicsSignal, 'center')
     done = Cpt(EpicsSignalRO, 'DMOV')
     done_value = 1
 
@@ -77,6 +77,7 @@ class DCM(Device):
     p = Cpt(EpicsMotor, '-Ax:P}Mtr')
 
 
+
 class DMM(Device):
     # en = Cpt(EpicsMotor, '-Ax:Energy}Mtr')
     b = Cpt(EpicsMotor, '-Ax:B}Mtr')
@@ -127,6 +128,13 @@ class Diffractometer(Device):
     yv = Cpt(EpicsMotor, '-Ax:YV}Mtr')
     zv = Cpt(EpicsMotor, '-Ax:ZV}Mtr')
     xv2 = Cpt(EpicsMotor, '-Ax:XV2}Mtr')
+
+
+
+
+class XBPM( Device):
+   vt = Cpt( EpicsSignal, 'CtrlDAC:BLevel-SP' )
+xBPM =XBPM( 'XF:11IDB-BI{XBPM:02}', name = 'xBPM' )
 
 diff = Diffractometer('XF:11IDB-ES{Dif', name='diff')
 
