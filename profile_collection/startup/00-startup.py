@@ -33,4 +33,7 @@ import ophyd
 from chxtools import attfuncs as att
 from chxtools import xfuncs as xf
 from chxtools.bpm_stability import bpm_read
+from chxtools import transfuncs as trans
+
+
 #from chxtools import bpm_stability as bpmst

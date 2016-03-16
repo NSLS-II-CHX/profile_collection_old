@@ -65,8 +65,10 @@ class XYThetaMotor(XYMotor):
 
 class HorizontalDiffractionMirror(XYMotor):
     "x and y with pitch, which has different read and write PVs"
-    p = FormattedComponent(EpicsSignal, read_pv='{self.prefix}-Ax:P}}E-I', write_pv='{self.prefix}-Ax:P}}E-SP', add_prefix=('read_pv', 'write_pv', 'suffix'))
-
+    #p = FormattedComponent(EpicsSignal, read_pv='{self.prefix}-Ax:P}}E-I', write_pv='{self.prefix}-Ax:P}}E-SP', add_prefix=('read_pv', 'write_pv', 'suffix'))
+    p = FormattedComponent(EpicsSignal, read_pv='{self.prefix}-Ax:P}}Pos-I', write_pv='{self.prefix}-Ax:P}}PID-SP', add_prefix=('read_pv', 'write_pv', 'suffix'))
+    # for some reason we cannot scan on E-SP. This is the actual piezo voltage (max 100) while our 'usual values' are converted to urad by some other laye rof logic in the ioc
+    # the currrent SP is the input of the PID feedback loop. This requitred the feedback loop to be turned ON
 
 class DCM(Device):
     en = Cpt(EpicsMotor, '-Ax:Energy}Mtr')
