@@ -90,7 +90,7 @@ class DMM(Device):
 
 
 class Transfocator(Device):
-    crl = DDC({'num%d' % i: (EpicsMotor, '%d-Ax:X}Mtr' % i)
+    crl = DDC({'num%d' % i: (EpicsMotor, '%d-Ax:X}Mtr' % i, {})
                for i in range(1, 9)})
     tran_x = Cpt(EpicsMotor, 'Ves-Ax:X}Mtr')
     tran_y = Cpt(EpicsMotor, 'Ves-Ax:Y}Mtr')
@@ -157,6 +157,10 @@ s4 = MotorCenterAndGap('XF:11IDB-ES{Slt:4', name='s4')  # temp guard slits
 
 # Diagnostic Manipulators
 foil_y = EpicsMotor('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr', name='foil_y')
+
+# foil_x for DBPM (note foil_y is for a different device, perhaps we should rename ...)
+foil_x = EpicsMotor('XF:11IDB-OP{Mon:Foil-Ax:X}Mtr', name='foil_x')
+
 # Note inconsistency in capitalization of Bpm/BPM below.
 bpm1 = XYMotor('XF:11IDA-BI{Bpm:1', name='bpm1')
 bpm2 = XYMotor('XF:11IDB-BI{BPM:2', name='bpm2')

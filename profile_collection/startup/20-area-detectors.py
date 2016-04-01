@@ -12,8 +12,12 @@ from ophyd.utils import set_and_wait
 import filestore.api as fs
 
 
-class Elm(SingleTrigger, DetectorBase):
-    pass
+#class Elm(SingleTrigger, DetectorBase):
+ #   pass
+
+
+
+
 
 
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
@@ -158,7 +162,7 @@ fs2 = StandardProsilica('XF:11IDA-BI{FS:2-Cam:1}', name='fs2')
 fs_wbs = StandardProsilica('XF:11IDA-BI{BS:WB-Cam:1}', name='fs_wbs')
 dcm_cam = StandardProsilica('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam')
 fs_pbs = StandardProsilica('XF:11IDA-BI{BS:PB-Cam:1}', name='fs_pbs')
-# elm = Elm('XF:11IDA-BI{AH401B}AH401B:')
+##elm = Elm('XF:11IDA-BI{AH401B}AH401B:',)
 
 all_standard_pros = [xray_eye1, xray_eye2, xray_eye3, xray_eye1_writing, xray_eye2_writing,
                      xray_eye3_writing, fs1, fs2, fs_wbs, dcm_cam, fs_pbs]
@@ -186,8 +190,14 @@ eiger1m_single.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelen
 eiger4m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m_single')
 eiger4m_single.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance']
 eiger4m_single.file.read_attrs = []
-eiger4m_single.read_attrs = ['file','stats1']
+eiger4m_single.read_attrs = ['file','stats1', 'stats2', 'stats3', 'stats4', 'stats5']
 eiger4m_single.stats1.read_attrs = ['total']
+eiger4m_single.stats2.read_attrs = ['total']
+eiger4m_single.stats3.read_attrs = ['total']
+eiger4m_single.stats4.read_attrs = ['total']
+eiger4m_single.stats4.read_attrs = ['total']
+eiger4m_single.stats5.read_attrs = ['total']
+
 
 
 # Eiger 1M using fast trigger assembly

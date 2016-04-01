@@ -47,19 +47,19 @@ sam_y = diff.yh
 sam_pitch = diff.phh
 
 def W_in():
-    mov(diff.zv,0.20018)
-    mov(diff.xv2, 9.69470)
-    mov(diff.yv,1.24146)
+    mov(diff.zv,0.20016)
+    mov(diff.yv, 4.0363)
+    mov(diff.xv2,-21.6900)
 
 def Pt_in():
-   mov(diff.zv,0.20014)
+   mov(diff.zv,0.20012)
    #mov(diff.xv2,-4.74)
-   #mov(diff.xv2,-4.93060)
-   mov(diff.yv,1.31484)
-
+   #mov(diff.xv2,-5.0506)
+   mov(diff.yv,1.389)
    mov(diff.xv2,-4.8106)
+
 def bst_out():
-    mov(diff.xv2,-20.)
+    mov(diff.xv2,-22.65)
 
 def s10_in():
     mov(diff.xh,-11.695)    
@@ -85,6 +85,23 @@ def Log_Pos( ):
     for motors in [ diff, mbs, dcm, s1, s2, s4, bpm1,bpm2, xbpm ]:
         log_pos( motors )
 
+def capillary2_in():
+    mov(diff.xh,0.85)    
+    mov(diff.yh,0.8659)
+
+def capillary3_in():
+    mov(diff.xh, 0.85)
+    mov(diff.yh, 4.8)
+
+def capillary1_in():
+     mov(diff.xh, 0.85)
+     mov(diff.yh, -4.14)
+
+def XPCS_series():
+    mov(foil_x, -26 )  #move the foil to 'empty' postion
+    caput('XF:11IDB-ES{Det:Eig4M}cam1:ArrayCounter', 0)
+    count()        #collect data
+    mov(foil_x, 30)  #move the foil to 'YAG' postion
 
 
 
@@ -171,13 +188,18 @@ class Sample(object):
         self.md = md
         self.md['name'] = name
 
-        self.sample_tilt = 0
+        self.sample_tilt = 0 # degrees
+        # sample_tilt positive means sample (and scattering) is misrotated counter-clockwise
 
     def xr(self, move_amount):
-        diff.xh.move( diff.xh.user_readback.value + move_amount, timeout=180 )
+        target = diff.xh.user_readback.value + move_amount
+        diff.xh.move( target, timeout=180 )
+        diff.xh.move( target, timeout=180 )
 
     def yr(self, move_amount):
-        diff.yh.move( diff.yh.user_readback.value + move_amount, timeout=180 )
+        target = diff.yh.user_readback.value + move_amount
+        diff.yh.move( target, timeout=180 )
+        diff.yh.move( target, timeout=180 )
 
 
     def get_md(self, **md):
@@ -191,8 +213,9 @@ class Sample(object):
         md_current['sample'] = self.md
         md_current['sample']['x'] = diff.xh.user_readback.value
         md_current['sample']['y'] = diff.yh.user_readback.value
-        md_current['sample']['holder'] = 'air capillary holder'
-        #md_current['sample']['holder'] = 'vacuum bar holder'
+        #md_current['sample']['holder'] = 'air capillary holder'
+        md_current['sample']['holder'] = 'vacuum bar holder (kinematic)'
+        #md_current['sample']['holder'] = 'air bar holder (kinematic)'
 
         md_current.update(self.md)
         md_current['x_position'] = md_current['sample']['x']
@@ -345,7 +368,7 @@ class Sample(object):
                 #print("Now at {}, {}".format(xtmp, ytmp))
 
                 
-    def gridMove(self, amt=[0,0], grid_spacing=0.06):
+    def gridMove(self, amt=[0,0], grid_spacing=0.075):
         '''Move in the sample coordinate grid. The amt is [x,y].'''
 
         tilt = np.radians(self.sample_tilt)
@@ -361,6 +384,26 @@ class Sample(object):
         print('Move by ({:.4f}, {:.4f})'.format(dvp[0], -dvp[1]))
         self.xr(dvp[0])
         self.yr(-dvp[1])
+
+# LW try to write ID gap vs. energy calibration routine
+
+def ID_calibration(gap_start,gap_stop,gap_step):
+	"""
+	future documentation...
+	"""
+	dcm.b.timeout=1200	#make sure dcm motions don't timeout...
+	dcm.en.timeout=1200
+
+
+	# get the last dataset:
+	header = db[-1]
+	data = get_table(header)
+	x = data.dcm_b
+	y = data.xray_eye1_stats1_total
+	
+	print('jakhdsfl')
+
+	
 
 
 
