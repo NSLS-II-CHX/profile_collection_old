@@ -47,9 +47,12 @@ sam_y = diff.yh
 sam_pitch = diff.phh
 
 def W_in():
-    mov(diff.zv,0.20016)
-    mov(diff.yv, 6.48889)
-    mov(diff.xv2,-21.8501)
+    #mov(diff.zv,0.20016)     - these were for the liquid GI-SAXS setup, Wiegart 2016-1
+    #mov(diff.yv, 6.48889)
+    #mov(diff.xv2,-21.8501)
+    mov(diff.zv,0.20017)
+    mov(diff.yv, 3.86982)
+    mov(diff.xv2,-21.9112)
 
 def saxs_bst_in():
     mov(saxs_bst.x,-130.6010)
@@ -59,8 +62,10 @@ def Pt_in():
    mov(diff.zv,0.20012)
    #mov(diff.xv2,-4.74)
    #mov(diff.xv2,-5.0506)
-   mov(diff.yv,1.389)
-   mov(diff.xv2,-4.8106)
+   #mov(diff.yv,1.389)     - these were for the liquid GI-SAXS experiment, Wiegart 2016-1
+   #mov(diff.xv2,-4.8106)
+   mov(diff.yv, 3.88983)   # transmission SAXS
+   mov(diff.xv2,-9.0029)
 
 def bst_out():
     mov(diff.xv2,-22.65)
