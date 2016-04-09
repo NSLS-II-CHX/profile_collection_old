@@ -48,8 +48,12 @@ sam_pitch = diff.phh
 
 def W_in():
     mov(diff.zv,0.20016)
-    mov(diff.yv, 4.0363)
-    mov(diff.xv2,-21.6900)
+    mov(diff.yv, 6.48889)
+    mov(diff.xv2,-21.8501)
+
+def saxs_bst_in():
+    mov(saxs_bst.x,-130.6010)
+    mov(saxs_bst.y1,-12.00)
 
 def Pt_in():
    mov(diff.zv,0.20012)

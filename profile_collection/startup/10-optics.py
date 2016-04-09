@@ -7,6 +7,8 @@ from ophyd import (Component as Cpt, FormattedComponent,
 #und_gap = 'SR:C11-ID:G1{IVU20:1-Mtr:2}'  #SR:C11-ID:G1{IVU20:1-Mtr:2}Inp:Pos ??
 
 
+
+
 class MotorCenterAndGap(Device):
     "Center and gap using Epics Motor records"
     xc = Cpt(EpicsMotor, '-Ax:XCtr}Mtr')
@@ -78,7 +80,12 @@ class DCM(Device):
     fp = Cpt(EpicsMotor, '-Ax:FP}Mtr')
     p = Cpt(EpicsMotor, '-Ax:P}Mtr')
 
+ 
 
+class SAXSBeamStop( Device):
+	x = Cpt( 	EpicsMotor, '-Ax:X}Mtr' )
+	y1 = Cpt( 	EpicsMotor, '-Ax:YFT}Mtr')
+ 
 
 class DMM(Device):
     # en = Cpt(EpicsMotor, '-Ax:Energy}Mtr')
@@ -168,3 +175,12 @@ bpm2 = XYMotor('XF:11IDB-BI{BPM:2', name='bpm2')
 w1 = XYMotor('XF:11IDB-OP{Win:1', name='w1')  # window positioners
 hdm = HorizontalDiffractionMirror('XF:11IDA-OP{Mir:HDM', name='hdm')
 gsl = VirtualMotorCenterAndGap('XF:11IDB-OP{Slt:Guard', name='gs1')  #Guard rSlits (SmarAct)
+
+
+#SAXS beam stop
+saxs_bst = SAXSBeamStop( 'XF:11IDB-ES{BS:SAXS', name = 'saxs_bst' )
+ 
+
+
+
+
