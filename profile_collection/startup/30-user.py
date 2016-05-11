@@ -51,7 +51,7 @@ def W_in():
     #mov(diff.yv, 6.48889)
     #mov(diff.xv2,-21.8501)
     mov(diff.zv,0.20017)
-    mov(diff.yv, 3.86982)
+    mov(diff.yv, 3.89974)
     mov(diff.xv2,-21.9112)
 
 def saxs_bst_in():
@@ -105,6 +105,31 @@ def capillary3_in():
 def capillary1_in():
      mov(diff.xh, 0.85)
      mov(diff.yh, -4.14)
+
+def kinem_cap1_in():
+     mov(diff.xh, -4.5)
+     mov(diff.yh, -1.2)
+
+def kinem_cap2_in():
+     mov(diff.xh, .4)
+     mov(diff.yh, -1.2)
+
+def kinem_cap3_in():
+     mov(diff.xh, 5.4)
+     mov(diff.yh, -1.2)
+
+
+
+def XPCS_series():
+    mov(foil_x, -26 )  #move the foil to 'empty' postion
+    caput('XF:11IDB-ES{Det:Eig4M}cam1:ArrayCounter', 0)
+    count()        #collect data
+    mov(foil_x, 30)  #move the foil to 'YAG' postion
+
+
+
+
+
 
 def XPCS_series():
     mov(foil_x, -26 )  #move the foil to 'empty' postion
@@ -183,6 +208,18 @@ def show_filenames(name, doc):
 
 # RE.subscribe('stop', show_filenames)
 
+def yg_snap(**subs ):
+    movr(diff.xh,.7)
+    caput('XF:11IDB-ES{Det:Eig4M}cam1:NumImages',subs['frames'])
+    caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquireTime',subs['acq'])
+    caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquirePeriod',subs['acq'])
+    count(**RE.md)
+    movr(diff.xh,-.7)
+    caput('XF:11IDB-ES{Det:Eig4M}cam1:NumImages',1)
+    caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquireTime',.1)
+    caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquirePeriod',.1)
+
+
 
 
 
@@ -198,6 +235,8 @@ class Sample(object):
         self.md['name'] = name
 
         self.sample_tilt = 0 # degrees
+        self.references = None # referenc points for gridMoveAbs
+
         # sample_tilt positive means sample (and scattering) is misrotated counter-clockwise
 
     def xr(self, move_amount):
@@ -223,8 +262,8 @@ class Sample(object):
         md_current['sample']['x'] = diff.xh.user_readback.value
         md_current['sample']['y'] = diff.yh.user_readback.value
         #md_current['sample']['holder'] = 'air capillary holder'
-        md_current['sample']['holder'] = 'vacuum bar holder (kinematic)'
-        #md_current['sample']['holder'] = 'air bar holder (kinematic)'
+        #md_current['sample']['holder'] = 'vacuum bar holder (kinematic)'
+        md_current['sample']['holder'] = 'air bar holder (kinematic)'
 
         md_current.update(self.md)
         md_current['x_position'] = md_current['sample']['x']
@@ -394,6 +433,31 @@ class Sample(object):
         self.xr(dvp[0])
         self.yr(-dvp[1])
 
+
+
+    def gridMoveAbs(self, amt=[0,0], grid_spacing=0.075):
+        '''Move in the sample coordinate grid. The amt is [x,y].
+			Moves with respect to a reference point
+		'''
+        if self.references is None:
+            print("Error, no reference point set, please set\
+				by selecting addreferencepoint.")
+		
+        tilt = np.radians(self.sample_tilt)
+
+        rot_matrix = np.array( [ 
+            [+np.cos(tilt), +np.sin(tilt)],
+            [-np.sin(tilt), +np.cos(tilt)]
+            ] )
+
+        dv = np.array(np.asarray(amt)*grid_spacing) # vector in sample coordinate system
+        dvp = np.dot(dv, rot_matrix) # dx in instrument coordinate system
+
+        print('Move by ({:.4f}, {:.4f})'.format(dvp[0], -dvp[1]))
+        self.xr(dvp[0])
+        self.yr(-dvp[1])
+
+
 # LW try to write ID gap vs. energy calibration routine
 
 def ID_calibration(gap_start,gap_stop,gap_step):
@@ -412,9 +476,156 @@ def ID_calibration(gap_start,gap_stop,gap_step):
 	
 	print('jakhdsfl')
 
+
+def measurecustom1():
+        x0 = 0.715003
+        y0 = -0.46736
+        dx = 0.075
+        dy = 0.075
+        mov(diff.yh,y0)
+        mov(diff.xh,x0)
+        # neg move
+        # up on sample
+        jlst = -(np.arange(8)-3)
+        ilst = [0]
+        for j in jlst:
+            for i in ilst:
+                mov(diff.yh,y0-j*dy)
+                mov(diff.xh, x0+i*dx)
+                mov(diff.yh,y0-j*dy)
+                mov(diff.xh, x0+i*dx)
+                sam.measure(600,comment="box ({},{})".format(12+j,16+i))
+
+def measurecustom2():
+        print("tile structures")
+        # ref coordinates:
+        #print("WARNING : need optimized box (5,3) poxition")
+        #x0 = 0.715003
+        #y0 = -0.46736
+        #reference coordinates box label:
+        #box is y,x pair where y increasing goes down and x increasing right
+        box0 = 3,5
+        #x0, y0 = -.486268, -1.05503 # from box (4,0) tile 2
+        #x0, y0 = -.485841, -.90597 # from box (6,1) tile 4
+        x0, y0 = -.106606, -1.13920# box 2,3, (x,y
+        dx = 0.075
+        dy = 0.075
+        mov(diff.yh,y0)
+        mov(diff.xh,x0)
+        #mov(sam_x, -.33532-0.075*3);mov(sam_y, -1.13244 -0.075*3);
+ 
+        #tile 1,2,3,4 elements 0 to 3:
+        #positive y is down and pos x is right
+        jlst = [4]
+        ilst = [0, 1, 2, 3,4,5,6]
+              
+        for i in ilst:
+            for j in jlst:
+                mov(diff.yh,y0+j*dy)
+                mov(diff.xh, x0+i*dx)
+                mov(diff.yh,y0+j*dy)
+                mov(diff.xh, x0+i*dx)
+                sam.measure(600,comment="box ({},{})".format(box0[0]+j,box0[1]+i))
+
+        #tile 1,2,4 elements 4 to 8 (same ref box, (5,3)):
+        #positive y is up and pos x is right
+        #jlst = [-2,-1,1]
+        #ilst = np.arange(8)-3
+              
+        #for j in jlst:
+            #for i in ilst:
+                #mov(diff.yh,y0-j*dy)
+                #mov(diff.xh, x0+i*dx)
+                #mov(diff.yh,y0-j*dy)
+                #mov(diff.xh, x0+i*dx)
+                #sam.measure(600,comment="box ({},{})".format(box0[0]-j,box0[1]+i))
+
+def measurecustom3():
+        print("hex structures vary number, 60 sec exposures")
+        #reference coordinates box label:
+        #box is y,x pair where y increasing goes down and x increasing right
+        #box0 = 0, 15 # (y,x)
+        #x0, y0 = .632094, -1.37608# box 0, 15 (y,x)
+        #box0 = 4, 15 # (y,x)
+        #x0, y0 = 0.6400, -1.07768 # box (4, 15) 
+        
+        box0 = 9, 15
+        x0, y0=.644901, -.68919
+
+        dx = 0.075
+        dy = 0.075
+
+        mov(diff.yh,y0)
+        mov(diff.xh,x0)
+ 
+        #positive y is down and pos x is right
+        jlst = [0, 1, 2, 3, 4, 5, 6, 7]
+        ilst = [-6, -5, -4, -3, -2, -1, 0, 1]
+              
+        for i in ilst:
+            for j in jlst:
+                mov(diff.yh,y0+j*dy)
+                mov(diff.xh, x0+i*dx)
+                mov(diff.yh,y0+j*dy)
+                mov(diff.xh, x0+i*dx)
+                sam.measure(60,comment="box ({},{}) (5x5 hex arrays vary N)".format(box0[0]+j,box0[1]+i))
+
+        #tile 1,2,4 elements 4 to 8 (same ref box, (5,3)):
+        #positive y is up and pos x is right
+        #jlst = [-2,-1,1]
+        #ilst = np.arange(8)-3
+              
+        #for j in jlst:
+            #for i in ilst:
+                #mov(diff.yh,y0-j*dy)
+                #mov(diff.xh, x0+i*dx)
+                #mov(diff.yh,y0-j*dy)
+                #mov(diff.xh, x0+i*dx)
+                #sam.measure(600,comment="box ({},{})".format(box0[0]-j,box0[1]+i))
+
+
+#template
 	
+def measurecustomscratch():
+        x0 = .03765
+        y0 = -.99294
+        dx = 0.075
+        dy = 0.075
+        mov(diff.yh,y0)
+        mov(diff.xh,x0)
+
+        jlst = [0]
+        ilst = [-4, -5, -6, -7]
+        for j in jlst:
+            for i in ilst:
+                mov(diff.yh,y0-j*dy)
+                mov(diff.xh, x0+i*dx)
+                mov(diff.yh,y0-j*dy)
+                mov(diff.xh, x0+i*dx)
+                sam.measure(600,comment="box ({},{})".format(5-j,i+7))
 
 
+        jlst = [2, 1, -1, -2]
+        ilst = [-7, -6, -5, -4, -3,-2, -1,0,1]
+        for j in jlst:
+            for i in ilst:
+                mov(diff.yh,y0-j*dy)
+                mov(diff.xh, x0+i*dx)
+                mov(diff.yh,y0-j*dy)
+                mov(diff.xh, x0+i*dx)
+                sam.measure(600,comment="box ({},{})".format(6-j,i+7))
 
-
+        #this ref is box (9,16) upper right box of lower right quad
+        x0 = .71645
+        y0 = -.68810
+        jlst = [0, -1, -2, -3, -4, -5, -6, -7]
+        ilst = [0,-1, -2, -3, -4, -5, -6, -7]
+        for j in jlst:
+            for i in ilst:
+                mov(diff.yh,y0-j*dy)
+                mov(diff.xh, x0+i*dx)
+                mov(diff.yh,y0-j*dy)
+                mov(diff.xh, x0+i*dx)
+                sam.measure(600,comment="box ({},{})".format(6-j,i+7))
+              
 
