@@ -62,7 +62,7 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
         super().stage()
         fn = os.path.join(self.file_path.get(), res_uid)
         res_kwargs = {'frame_per_point': self.get_frames_per_point()}
-        logger.debug("Inserting resource with filename %s", fn)
+        # logger.debug("Inserting resource with filename %s", fn)
         self._resource = fs.insert_resource('AD_EIGER', fn, res_kwargs)
 
     def get_frames_per_point(self):
