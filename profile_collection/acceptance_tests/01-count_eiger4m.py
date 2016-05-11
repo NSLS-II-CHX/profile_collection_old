@@ -7,6 +7,6 @@ for aq_t, aq_p in zip([1], [2]):
     eiger4m.tr.exposure_time.value = aq_t
     eiger4m.tr.acquire_period.value = aq_p
     eiger4m.tr.num_images.value = 10 
-    print("describe what to see")
+    print("The fast shutter should open and close for 10 times")
     RE(Count([eiger4m]), 
        LiveTable(['eiger4m_stats1_total', 'eiger4m_stats2_total']))
