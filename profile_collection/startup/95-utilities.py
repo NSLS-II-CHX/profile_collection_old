@@ -25,18 +25,21 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     import csv
     import numpy as np
     import matplotlib.pyplot as plt
-    import xfuncs as xf
-    import Tkinter, tkFileDialog
+    #import xfuncs as xf
+    #import Tkinter, tkFileDialog
         
     if file=='ia':          # open file dialog
-        root = Tkinter.Tk()
-        root.withdraw()
-        file_path = tkFileDialog.askopenfilename()
+        print('this would open a file input dialog IF Tkinter was available in the $%^& python environment as it used to')
+        #root = Tkinter.Tk()
+        #root.withdraw()
+        #file_path = tkFileDialog.askopenfilename()
+        description=file_path
     elif isinstance(file, str) and file!='ia':
         file_path=file
+        descritpion=file_path
     elif isinstance(file,dict) and 'start' in file.keys():
        databroker_object=1
-                        
+       description='scan # ',header.start['scan_id'],' uid: ', header.start['uid'][:10]
     plt.close("all")
     Edge_data={'Cu': 8.979, 'Ti': 4.966}
     if databroker_object !=1:
@@ -58,12 +61,12 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     elif databroker_object==1:
        data = get_table(file)
        Bragg = data.dcm_b[1:]     #retrive the data (first data point is often "wrong", so don't use
-       Gap = data.ivu_gap[1:]
-       #Intensity = ??? [1:] 			#need to find signal from electrometer...elm is commented out in detectors at the moment...???														
+       #Gap = data.SR:C11-ID:G1{IVU20:1_readback[1:] name is messed up in databroker -> currently don't use gap
+       Intensity = data.elm_sum_all [1:] 			#need to find signal from electrometer...elm is commented out in detectors at the moment...???														
 
 
     B=np.array(Bragg)*-1.0+B_off
-    G=np.array(Gap[0:len(B)])   # not currently used, but converted for future use
+    #G=np.array(Gap[0:len(B)])   # not currently used, but converted for future use
     Int=np.array(Intensity[0:len(B)])
         
     # normalize and remove background:
@@ -76,7 +79,7 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     plt.legend(loc='best')
     plt.xlabel(r'$\theta_B$ [deg.]')
     plt.ylabel('intensity')
-    plt.title(['Energy Calibration using: ',file])
+    plt.title(['Energy Calibration using: ',description])
     plt.grid()
         
     plt.figure(2)
@@ -86,7 +89,7 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     plt.legend(loc='best')
     plt.xlabel('E [keV.]')
     plt.ylabel('intensity')
-    plt.title(['Energy Calibration using: ',file])
+    plt.title(['Energy Calibration using: ',description])
     plt.grid()
         
     # calculate derivative and analyze:
@@ -98,7 +101,7 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     plt.legend(loc='best')
     plt.xlabel(r'$\theta_B$ [deg.]')
     plt.ylabel('diff(int)')
-    plt.title(['Energy Calibration using: ',file])
+    plt.title(['Energy Calibration using: ',description])
     plt.grid()
         
     plt.figure(4)
@@ -107,14 +110,14 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     plt.legend(loc='best')
     plt.xlabel('E [keV.]')
     plt.ylabel('diff(int)')
-    plt.title(['Energy Calibration using: ',file])
+    plt.title(['Energy Calibration using: ',description])
     plt.grid()
         
     edge_index=np.argmax(diffdat)
     B_edge=xf.get_Bragg(xtal,Edge_data[Edge])[0]
         
     print('') 
-    print('Energy calibration for: ',file_path)
+    print('Energy calibration for: ',description)
     print('Edge used for calibration: ',Edge)
     print('Crystal used for calibration: ',xtal)
     print('Bragg angle offset: ', B_edge-B[edge_index],'deg. (CHX coordinate system: ',-(B_edge-B[edge_index]),'deg.)')
@@ -130,7 +133,7 @@ def dcm_roll(Bragg,offset,distance,offmode='mm',pixsize=5.0):
     offset: set of corresponding offsets
     offmode: units of offsets = mm or pixel (default:'mm')
     pixsize: pixel size for offset conversion to mm, if offsets are given in pixels
-    default is 5um (pixsize is ignored, if offmoe is 'mm')
+    default is 5um (pixsize is ignored, if offmode is 'mm')
     distance: DCM center of 1st xtal to diagnostic/slit [mm]
     preset distances available: 'dcm_bpm',dcm_mbs', 'dcm_sample'
     """
@@ -182,19 +185,19 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0,sl=300):
 	gapstart: minimum gap used in calibration (if <5.2, value will be set to 5.2)
 	gapstop: maximum gap used in calibration
 	gapstep: size of steps between two gap points
-	gapoff: offset applied to calculation gap vs. energy from xfuncs.get_Es()
+	gapoff: offset applied to calculation gap vs. energy from xfuncs.get_Es(gap-gapoff)
 	sl: sleep between two gap points (to avoid overheating the DCM Bragg motor) 
     writes outputfile with fitted value for the center of the Bragg scan to:  '/home/xf11id/Repos/chxtools/chxtools/X-ray_database/
 	changes 03/18/2016: made compatible with python V3 and latest versio of bluesky (working on it!!!)
     """
     import numpy as np
-    import xfuncs as xf
+    #import xfuncs as xf
     #from dataportal import DataBroker as db, StepScan as ss, DataMuxer as dm
     import time
     from epics import caput, caget
     from matplotlib import pyplot as plt
     from scipy.optimize import curve_fit
-    gaps=np.arange(gapstart,gapstop,gapstep)+gapoff
+    gaps=np.arange(gapstart,gapstop,gapstep)-gapoff   # not sure this should be '+' or '-' ...
     print('ID calibration will contain the following gaps [mm]: ',gaps)
     if caget('XF:11IDA-OP{Mono:DCM-Ax:X}Pos-Sts') == 1:
         xtal='Si111cryo'
@@ -219,58 +222,57 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0,sl=300):
     E1=[]
     realgap=[]
     detselect(xray_eye1)
+    print(gaps)
     for i in gaps:
         if i>= 5.2:
-            B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i-gapoff,5)[1])[0]
+            B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i+gapoff,5)[1])[0]
         else:
          i=5.2
          B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i,5)[1])[0]
-    print('initial guess: Bragg= ',B_guess,' deg.   ID gap = ',i,' mm')
-    if xf.get_Es(i,5)[1] < 9.5 and round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1) != -7.5:
-        caput('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL',-7.5)  # use HDM Si stripe
-        time.sleep(20)
-    elif xf.get_Es(i,5)[1] >= 9.5 and round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1) != 7.5:
-        caput('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL',7.5)   # use HDM Rh stripe
-        time.sleep(20)
-    if round(caget('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr'),1) != 0.0:
-        caput('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr',0.0)
-        time.sleep(30)
-    else: pass
-    print('moving DCM Bragg angle to: ',B_guess,' deg and ID gap to ',i,' mm')
-    dcm.b.timeout=1200	#make sure dcm motions don't timeout...
-    dcm.en.timeout=1200
-    mov(dcm.b,B_guess)
-    mov(ivu_gap,i)
-    print('hurray, made it up to here!')
-    ascan(dcm.b,float(B_guess-.4),float(B_guess+.4),60)   # do the Bragg scan
-    header = db[-1]					#retrive the data (first data point is often "wrong", so don't use
-    data = get_table(header)
-    B = data.dcm_b[2:]
-    intdat = data.xray_eye1_stats1_total[2:] 																	
-    B=np.array(B)
-    intdat=np.array(intdat)
-    B=np.array(ss[-1].dcm_b)[1:]  # retrive the data (first data point is often "wrong", so don't use
-    intdat=np.array(ss[-1].bpm_cam_stats_total1)[1:]
-    A=np.max(intdat)          # initial parameter guess and fitting
-    xc=B[np.argmax(intdat)]
-    w=.2
-    yo=mean(intdat)
-    p0=[yo,A,xc,w]
-    print('initial guess for fitting: ',p0)
-    try:
-        coeff,var_matrix = curve_fit(gauss,B,intdat,p0=p0)
-        center.append(coeff[2])
-        E1.append(xf.get_EBragg(xtal,-coeff[2])/5.0)
-        realgap.append(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))
+        print('initial guess: Bragg= ',B_guess,' deg.   ID gap = ',i,' mm')
+        if xf.get_Es(i,5)[1] < 9.5 and round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1) != -7.5:
+            caput('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL',-7.5)  # use HDM Si stripe
+            time.sleep(20)
+        elif xf.get_Es(i,5)[1] >= 9.5 and round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1) != 7.5:
+            caput('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL',7.5)   # use HDM Rh stripe
+            time.sleep(20)
+        if round(caget('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr'),1) != 0.0:
+            caput('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr',0.0)
+            time.sleep(30)
+        else: pass
+        print('moving DCM Bragg angle to: ',B_guess,' deg and ID gap to ',i,' mm')
+        dcm.b.timeout=1200	#make sure dcm motions don't timeout...
+        dcm.en.timeout=1200
+        mov(dcm.b,B_guess)
+        mov(ivu_gap,i)
+        print('hurray, made it up to here!')
+        RE(ascan(dcm.b,float(B_guess-.4),float(B_guess+.4),60))   # do the Bragg scan
+        header = db[-1]					#retrive the data (first data point is often "wrong", so don't use
+        data = get_table(header)
+        B = data.dcm_b[2:]
+        intdat = data.xray_eye1_stats1_total[2:] 																	
+        B=np.array(B)
+        intdat=np.array(intdat)
+        A=np.max(intdat)          # initial parameter guess and fitting
+        xc=B[np.argmax(intdat)]
+        w=.2
+        yo=np.mean(intdat)
+        p0=[yo,A,xc,w]
+        print('initial guess for fitting: ',p0)
+        try:
+            coeff,var_matrix = curve_fit(gauss,B,intdat,p0=p0)
+            center.append(coeff[2])
+            E1.append(xf.get_EBragg(xtal,-coeff[2])/5.0)
+            realgap.append(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))
 #   # append data file by i, 1 & xf.get_EBragg(xtal,-coeff[2]/5.0):
-        with open(fpath+fn, "a") as myfile:
-            myfile.write(str(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))+'    1.0 '+str(float(xf.get_EBragg(xtal,-coeff[2])/5.0))+'\n')
-        print('added data point: ',caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'),' ',1.0,'     ',str(float(xf.get_EBragg(xtal,-coeff[2])/5.0)))
-    except: print('could not evaluate data point for ID gap = ',i,' mm...data point skipped!')
-    time.sleep(sl)
+            with open(fpath+fn, "a") as myfile:
+                myfile.write(str(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))+'    1.0 '+str(float(xf.get_EBragg(xtal,-coeff[2])/5.0))+'\n')
+            print('added data point: ',caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'),' ',1.0,'     ',str(float(xf.get_EBragg(xtal,-coeff[2])/5.0)))
+        except: print('could not evaluate data point for ID gap = ',i,' mm...data point skipped!')
+        time.sleep(sl)
     plt.close(234)
     plt.figure(234)
-    plt.plot(E1,gaps,'ro-')
+    plt.plot(E1,realgap,'ro-')
     plt.xlabel('E_1 [keV]')
     plt.ylabel('ID gap [mm]')
     plt.title('ID gap calibration in file: '+fpath+fn,size=12)

@@ -1,7 +1,7 @@
 import time as ttime  # tea time
 from ophyd import (ProsilicaDetector, SingleTrigger, TIFFPlugin,
                    ImagePlugin, StatsPlugin, DetectorBase, HDF5Plugin,
-                   AreaDetector, EpicsSignal, EpicsSignalRO)
+                   AreaDetector, EpicsSignal, EpicsSignalRO, ROIPlugin)
 from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.areadetector.base import ADComponent, EpicsSignalWithRBV
 from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
@@ -34,6 +34,7 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
     stats3 = Cpt(StatsPlugin, 'Stats3:')
     stats4 = Cpt(StatsPlugin, 'Stats4:')
     stats5 = Cpt(StatsPlugin, 'Stats5:')
+    roi = Cpt(ROIPlugin, 'ROI1:')
 
 
 class StandardProsilicaWithTIFF(StandardProsilica):
@@ -112,7 +113,6 @@ class EigerBase(AreaDetector):
     stats5 = Cpt(StatsPlugin, 'Stats5:')
 
     shutter_mode = ADComponent(EpicsSignalWithRBV, 'cam1:ShutterMode')
-
 
 class EigerSingleTrigger(SingleTrigger, EigerBase):
     def __init__(self, *args, **kwargs):

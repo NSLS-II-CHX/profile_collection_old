@@ -1,7 +1,7 @@
 
 TEMPLATES = {}
 TEMPLATES['long'] = """
-{{- start.plan_type }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
+{{- start.plan_name }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
 
 
 Scan Plan
@@ -22,14 +22,14 @@ Metadata
 
 
 {%- endfor -%}
-exposure time: 
-acquire  time:
+exposure time: TODO
+acquire  time: TODO
 
 """
 
 
 TEMPLATES['desc'] = """
-{{- start.plan_type }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})"""
+{{- start.plan_name }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})"""
 TEMPLATES['call'] = """RE({{ start.plan_type }}(
 {%- for k, v in start.plan_args.items() %}{%- if not loop.first %}   {% endif %}{{ k }}={{ v }}
 {%- if not loop.last %},
