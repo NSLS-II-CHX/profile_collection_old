@@ -229,6 +229,9 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0,sl=300):
         else:
          i=5.2
          B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i,5)[1])[0]
+        if i > 8:
+           exptime=caget('XF:11IDA-BI{Bpm:1-Cam:1}cam1:AcquireTime')
+           caput('XF:11IDA-BI{Bpm:1-Cam:1}cam1:AcquireTime',2*exptime)
         print('initial guess: Bragg= ',B_guess,' deg.   ID gap = ',i,' mm')
         if xf.get_Es(i,5)[1] < 9.5 and round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1) != -7.5:
             caput('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL',-7.5)  # use HDM Si stripe

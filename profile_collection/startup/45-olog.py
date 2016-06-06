@@ -1,7 +1,14 @@
+import readline
+
+#{{- readline.get_history_item(1)}}
 
 TEMPLATES = {}
+#TEMPLATES['long'] = """
+#{{- start.plan_name }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
+
 TEMPLATES['long'] = """
-{{- start.plan_name }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
+
+{{- start.plan_name}} :  {{ start.motors[0]}} {{start.plan_args.start}} {{start.plan_args.stop}} {{start.plan_args.num}} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
 
 
 Scan Plan
@@ -22,14 +29,16 @@ Metadata
 
 
 {%- endfor -%}
-exposure time: TODO
-acquire  time: TODO
+exposure time: TODO 
+acquire  time: TODO 
 
 """
 
 
 TEMPLATES['desc'] = """
+{{- readline.get_history_item(1)}}
 {{- start.plan_name }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})"""
+
 TEMPLATES['call'] = """RE({{ start.plan_type }}(
 {%- for k, v in start.plan_args.items() %}{%- if not loop.first %}   {% endif %}{{ k }}={{ v }}
 {%- if not loop.last %},
