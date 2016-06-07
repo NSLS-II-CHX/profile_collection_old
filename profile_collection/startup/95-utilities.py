@@ -177,16 +177,16 @@ def dcm_roll(Bragg,offset,distance,offmode='mm',pixsize=5.0):
     print('\Delta \Phi= ',p1[1]*180.0/np.pi,'deg')
     
 
-def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0,sl=300):
+def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
     """
     by LW 04/20/2015
     function to automatically take a ID calibration curve_fit
-    calling sequence: get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0,sl=300)
+    calling sequence: get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0)
 	gapstart: minimum gap used in calibration (if <5.2, value will be set to 5.2)
 	gapstop: maximum gap used in calibration
 	gapstep: size of steps between two gap points
 	gapoff: offset applied to calculation gap vs. energy from xfuncs.get_Es(gap-gapoff)
-	sl: sleep between two gap points (to avoid overheating the DCM Bragg motor) 
+	thermal management of Bragg motor is automatic, waiting for cooling <80C between Bragg scans
     writes outputfile with fitted value for the center of the Bragg scan to:  '/home/xf11id/Repos/chxtools/chxtools/X-ray_database/
 	changes 03/18/2016: made compatible with python V3 and latest versio of bluesky (working on it!!!)
     """
@@ -218,6 +218,7 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0,sl=300):
     except: raise CHX_utilities_Exception('error: could not create output file')
     
     ### do the scanning and data fitting, file writing,....
+    t_adjust=0
     center=[]
     E1=[]
     realgap=[]
@@ -229,9 +230,10 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0,sl=300):
         else:
          i=5.2
          B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i,5)[1])[0]
-        if i > 8:
+        if i > 8 and t_adjust == 0:     # adjust acquistion time once while opening the gap (could write something more intelligent in the long run...)
            exptime=caget('XF:11IDA-BI{Bpm:1-Cam:1}cam1:AcquireTime')
            caput('XF:11IDA-BI{Bpm:1-Cam:1}cam1:AcquireTime',2*exptime)
+           t_adjust = 1
         print('initial guess: Bragg= ',B_guess,' deg.   ID gap = ',i,' mm')
         if xf.get_Es(i,5)[1] < 9.5 and round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1) != -7.5:
             caput('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL',-7.5)  # use HDM Si stripe
@@ -272,7 +274,9 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0,sl=300):
                 myfile.write(str(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))+'    1.0 '+str(float(xf.get_EBragg(xtal,-coeff[2])/5.0))+'\n')
             print('added data point: ',caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'),' ',1.0,'     ',str(float(xf.get_EBragg(xtal,-coeff[2])/5.0)))
         except: print('could not evaluate data point for ID gap = ',i,' mm...data point skipped!')
-        time.sleep(sl)
+        while caget('XF:11IDA-OP{Mono:DCM-Ax:Bragg}T-I') > 80:
+            time.sleep(30)
+            print('DCM Bragg axis too hot (>80C)...waiting...')
     plt.close(234)
     plt.figure(234)
     plt.plot(E1,realgap,'ro-')
@@ -288,7 +292,7 @@ class CHX_utilities_Exception(Exception):
     pass
     """
     by LW 03/19/2015
-    class to raise xfuncs specific exceptions
+    class to raise utilities functions specific exceptions
     """   
     
     

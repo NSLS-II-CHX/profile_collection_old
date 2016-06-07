@@ -213,7 +213,19 @@ def yg_snap(**subs ):
     caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquireTime',.1)
     caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquirePeriod',.1)
 
-
+def get_R(header_si, header_rh):
+    datsi=get_table(header_si)
+    datrh=get_table(header_rh)
+    th_B=-datsi.dcm_b
+    En=xf.get_EBragg('Si111cryo',th_B)
+    Rsi=datsi.elm_sum_all
+    Rrh=datrh.elm_sum_all
+    plt.close(99)
+    plt.figure(99)
+    plt.semilogy(En,Rsi/Rrh,'ro-')
+    plt.xlabel('E [keV]');plt.ylabel('R_si / R_rh')
+    plt.grid()
+    return Rsi/Rrh
 
 
 
