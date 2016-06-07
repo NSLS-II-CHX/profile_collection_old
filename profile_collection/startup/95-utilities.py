@@ -197,14 +197,15 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
     from epics import caput, caget
     from matplotlib import pyplot as plt
     from scipy.optimize import curve_fit
-    gaps=np.arange(gapstart,gapstop,gapstep)-gapoff   # not sure this should be '+' or '-' ...
+    gaps = np.arange(gapstart, gapstop, gapstep) - gapoff   # not sure this should be '+' or '-' ...
     print('ID calibration will contain the following gaps [mm]: ',gaps)
-    if caget('XF:11IDA-OP{Mono:DCM-Ax:X}Pos-Sts') == 1:
-        xtal='Si111cryo'
-    elif caget('XF:11IDA-OP{Mono:DCM-Ax:X}Pos-Sts') == 2:
-        xtal='Si220cryo'
-    else: raise CHX_utilities_Exception('error: trying to do ID gap calibration with no crystal in the beam')
-    print('using ',xtal,' for ID gap calibration')
+    xtal_map = {1: 'Si111cryo', 2: 'Si220cryo'}
+    pos_sts_pv = 'XF:11IDA-OP{Mono:DCM-Ax:X}Pos-Sts'
+    try:
+        xtal = xtal_map[caget(pos_sts_pv)]
+    except KeyError:
+        raise CHX_utilities_Exception('error: trying to do ID gap calibration with no crystal in the beam')
+    print('using', xtal, 'for ID gap calibration')
     # create file for writing calibration data:
     fn='id_CHX_IVU20_'+str(time.strftime("%m"))+str(time.strftime("%d"))+str(time.strftime("%Y"))+'.dat'
     fpath='/home/xf11id/Repos/chxtools/chxtools/X-ray_database/'
@@ -224,23 +225,27 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
     realgap=[]
     detselect(xray_eye1)
     print(gaps)
+    MIN_GAP = 5.2
+    MAX_GAP =
     for i in gaps:
-        if i>= 5.2:
+        if i >= MIN_GAP: 
             B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i+gapoff,5)[1])[0]
         else:
-         i=5.2
-         B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i,5)[1])[0]
+            i = MIN_GAP 
+            B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i,5)[1])[0]
         if i > 8 and t_adjust == 0:     # adjust acquistion time once while opening the gap (could write something more intelligent in the long run...)
            exptime=caget('XF:11IDA-BI{Bpm:1-Cam:1}cam1:AcquireTime')
            caput('XF:11IDA-BI{Bpm:1-Cam:1}cam1:AcquireTime',2*exptime)
            t_adjust = 1
         print('initial guess: Bragg= ',B_guess,' deg.   ID gap = ',i,' mm')
-        if xf.get_Es(i,5)[1] < 9.5 and round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1) != -7.5:
-            caput('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL',-7.5)  # use HDM Si stripe
-            time.sleep(20)
-        elif xf.get_Es(i,5)[1] >= 9.5 and round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1) != 7.5:
-            caput('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL',7.5)   # use HDM Rh stripe
-            time.sleep(20)
+        es = xf.get_Es(i, 5)[1]
+        mirror_stripe_pos = round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1)
+        SI_STRIPE = -7.5
+        RH_STRIPE = 7.5
+        if es < 9.5:
+            yield from bp.abs_set(hdm.y, SI_STRIPE)
+        elif es >= 9.5:
+            yield from bp.abs_set(hdm.y, RH_STRIPE)
         if round(caget('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr'),1) != 0.0:
             caput('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr',0.0)
             time.sleep(30)
@@ -285,8 +290,6 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
     plt.title('ID gap calibration in file: '+fpath+fn,size=12)
     plt.grid()
     
-    
-    
         
 class CHX_utilities_Exception(Exception):
     pass
@@ -294,8 +297,3 @@ class CHX_utilities_Exception(Exception):
     by LW 03/19/2015
     class to raise utilities functions specific exceptions
     """   
-    
-    
-    
-    
-    
