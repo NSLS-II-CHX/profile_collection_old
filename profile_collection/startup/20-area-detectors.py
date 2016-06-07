@@ -1,7 +1,8 @@
 import time as ttime  # tea time
 from ophyd import (ProsilicaDetector, SingleTrigger, TIFFPlugin,
                    ImagePlugin, StatsPlugin, DetectorBase, HDF5Plugin,
-                   AreaDetector, EpicsSignal, EpicsSignalRO, ROIPlugin)
+                   AreaDetector, EpicsSignal, EpicsSignalRO, ROIPlugin,
+                   TransformPlugin)
 from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.areadetector.base import ADComponent, EpicsSignalWithRBV
 from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
@@ -34,6 +35,7 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
     stats3 = Cpt(StatsPlugin, 'Stats3:')
     stats4 = Cpt(StatsPlugin, 'Stats4:')
     stats5 = Cpt(StatsPlugin, 'Stats5:')
+    trans1 = Cpt(TransformPlugin, 'Trans1:')
     roi = Cpt(ROIPlugin, 'ROI1:')
 
 
@@ -169,11 +171,14 @@ all_standard_pros = [xray_eye1, xray_eye2, xray_eye3, xray_eye1_writing, xray_ey
 for camera in all_standard_pros:
     camera.read_attrs = ['stats1', 'stats2','stats3','stats4','stats5']
     # camera.tiff.read_attrs = []  # leaving just the 'image'
-    camera.stats1.read_attrs = ['total']
-    camera.stats2.read_attrs = ['total']
-    camera.stats3.read_attrs = ['total']
-    camera.stats4.read_attrs = ['total']
-    camera.stats5.read_attrs = ['total']
+    for stats_name in ['stats1', 'stats2','stats3','stats4','stats5']:
+        stats_plugin = getattr(camera, stats_name)
+        stats_plugin.read_attrs = ['total']
+        camera.stage_sigs[stats_plugin.blocking_callbacks] = 1
+
+    camera.stage_sigs[camera.roi.blocking_callbacks] = 1
+    camera.stage_sigs[camera.trans1.blocking_callbacks] = 1
+
 
 for camera in [xray_eye1_writing, xray_eye2_writing, xray_eye3_writing]:
     camera.read_attrs.append('tiff')
