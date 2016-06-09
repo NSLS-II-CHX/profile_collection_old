@@ -9,6 +9,7 @@ simple_template = """{{- start.plan_name }} ['{{ start.uid[:6] }}'] (scan num: {
 
 count_template = """{{- start.plan_name}} :  {{start.plan_args.num}} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
 
+
 Scan Plan
 ---------
 {{ start.plan_type }}
@@ -32,7 +33,11 @@ acquire  time: TODO
 
 """
 
-single_motor_template = """{{- start.plan_name}} :  {{ start.motors[0]}} {{start.plan_args.start}} {{start.plan_args.stop}} {{start.plan_args.num}} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
+
+#single_motor_template = """{{- start.plan_name}} :  {{ start.motors[0]}} {{start.plan_args.start}} {{start.plan_args.stop}} {{start.plan_args.num}} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
+single_motor_template = """{{- start.plan_name}} :  {{ start.motors[0]}}  {{'%0.3f' %start.plan_args.start|float}}    {{'%0.3f' %start.plan_args.stop|float}} {{start.plan_args.num}} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})
+
+
 
 
 Scan Plan
@@ -62,6 +67,10 @@ TEMPLATES = defaultdict(lambda: simple_template)
 TEMPLATES['ct'] = count_template
 TEMPLATES['dscan'] = single_motor_template
 TEMPLATES['ascan'] = single_motor_template
+TEMPLATES['ID_calibration'] = single_motor_template
+
+from jinja2 import Template
+
 
 # connect olog
 from functools import partial

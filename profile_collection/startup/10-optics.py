@@ -99,11 +99,11 @@ class DMM(Device):
 class Transfocator(Device):
     crl = DDC({'num%d' % i: (EpicsMotor, '%d-Ax:X}Mtr' % i, {})
                for i in range(1, 9)})
-    tran_x = Cpt(EpicsMotor, 'Ves-Ax:X}Mtr')
-    tran_y = Cpt(EpicsMotor, 'Ves-Ax:Y}Mtr')
-    tran_z = Cpt(EpicsMotor, 'Ves-Ax:Z}Mtr')
-    tran_ph = Cpt(EpicsMotor, 'Ves-Ax:Ph}Mtr')
-    tran_th = Cpt(EpicsMotor, 'Ves-Ax:Th}Mtr')
+    x = Cpt(EpicsMotor, 'Ves-Ax:X}Mtr')
+    y = Cpt(EpicsMotor, 'Ves-Ax:Y}Mtr')
+    z = Cpt(EpicsMotor, 'Ves-Ax:Z}Mtr')
+    ph = Cpt(EpicsMotor, 'Ves-Ax:Ph}Mtr')
+    th = Cpt(EpicsMotor, 'Ves-Ax:Th}Mtr')
 
 
 class Kinoform(Device):
@@ -157,9 +157,10 @@ gi = XYThetaMotor('XF:11IDB-OP{Mir:GI', name='gi')  # GI-mirror
 s2 = MotorCenterAndGap('XF:11IDB-OP{Slt:2', name='s2') #Beam-defining (large JJ) slits
 pbs = MotorSlits('XF:11IDA-OP{Slt:PB', name='pbs')  # pink beam slits
 flt_y = EpicsMotor('XF:11IDA-OP{Flt:1-Ax:Y}Mtr', name='flt_y')  # filters
-dcm = DCM('XF:11IDA-OP{Mono:DCM', name='dcm')
+dcm = DCM('XF:11IDA-OP{Mono:DCM', name='dcm') #, check position, e.g., by dcm.b.user_readback.value
 dmm = DMM('XF:11IDA-OP{Mono:DMM', name='dmm')
-mbs = VirtualMotorSlits('XF:11IDA-OP{Slt:MB', name='mbs')  # Mono-beam Slits
+mbs = VirtualMotorSlits('XF:11IDA-OP{Slt:MB', name='mbs')  # Mono-beam Slits, check position, e.g., by mbs.xc.readback.value
+tran= Transfocator('XF:11IDA-OP{Lens:', name='tran')    # Transfocator
 s4 = MotorCenterAndGap('XF:11IDB-ES{Slt:4', name='s4')  # temp guard slits
 
 # Diagnostic Manipulators

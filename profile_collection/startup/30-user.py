@@ -34,7 +34,7 @@ def change_motor_name( device):
 
 
 
-for motors in [ diff, bpm2, mbs, dcm, s1, s2, s4]:
+for motors in [ diff, bpm2, mbs, dcm, tran, s1, s2, s4]:
     change_motor_name( motors )
     
 # Alias motors

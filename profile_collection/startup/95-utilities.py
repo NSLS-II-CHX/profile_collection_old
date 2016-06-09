@@ -7,6 +7,8 @@ v 0.0.1 (this version): might have created a typo in E-calibration!!!
                         added dcm_roll for calculating DCM Roll correction
 """
 
+import bluesky.plans as bp
+
 ############
 ##################
 ####
@@ -208,15 +210,17 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
     print('using', xtal, 'for ID gap calibration')
     # create file for writing calibration data:
     fn='id_CHX_IVU20_'+str(time.strftime("%m"))+str(time.strftime("%d"))+str(time.strftime("%Y"))+'.dat'
-    fpath='/home/xf11id/Repos/chxtools/chxtools/X-ray_database/'
+    fpath='/tmp/'
+    # fpath='/home/xf11id/Repos/chxtools/chxtools/X-ray_database/'
     try:
-      outFile = open(fpath+fn, 'w')
-      outFile.write('% data from measurements '+str(time.strftime("%D"))+'\n')
-      outFile.write('% K colkumn is a placeholder! \n')
-      outFile.write('% ID gap [mm]     K      E_1 [keV] \n')
-      outFile.close()
-      print('successfully created outputfile: ',fpath+fn)
-    except: raise CHX_utilities_Exception('error: could not create output file')
+        outFile = open(fpath+fn, 'w')
+        outFile.write('% data from measurements '+str(time.strftime("%D"))+'\n')
+        outFile.write('% K colkumn is a placeholder! \n')
+        outFile.write('% ID gap [mm]     K      E_1 [keV] \n')
+        outFile.close()
+        print('successfully created outputfile: ',fpath+fn)
+    except:
+        raise CHX_utilities_Exception('error: could not create output file')
     
     ### do the scanning and data fitting, file writing,....
     t_adjust=0
@@ -226,7 +230,6 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
     detselect(xray_eye1)
     print(gaps)
     MIN_GAP = 5.2
-    MAX_GAP =
     for i in gaps:
         if i >= MIN_GAP: 
             B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i+gapoff,5)[1])[0]
@@ -243,20 +246,19 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
         SI_STRIPE = -7.5
         RH_STRIPE = 7.5
         if es < 9.5:
-            yield from bp.abs_set(hdm.y, SI_STRIPE)
+            stripe = SI_STRIPE
         elif es >= 9.5:
-            yield from bp.abs_set(hdm.y, RH_STRIPE)
-        if round(caget('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr'),1) != 0.0:
-            caput('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr',0.0)
-            time.sleep(30)
-        else: pass
-        print('moving DCM Bragg angle to: ',B_guess,' deg and ID gap to ',i,' mm')
-        dcm.b.timeout=1200	#make sure dcm motions don't timeout...
-        dcm.en.timeout=1200
-        mov(dcm.b,B_guess)
-        mov(ivu_gap,i)
+            stripe = RH_STRIPE
+        yield from bp.abs_set(hdm.y, stripe)
+        yield from bp.abs_set(foil_y, 0)  # Put YAG in beam.
+        print('moving DCM Bragg angle to:', B_guess ,'deg and ID gap to', i, 'mm')
+        yield from bp.abs_set(dcm.b, B_guess)
+        yield from bp.abs_set(ivu_gap,i)
         print('hurray, made it up to here!')
-        RE(ascan(dcm.b,float(B_guess-.4),float(B_guess+.4),60))   # do the Bragg scan
+        print('about to collect data')
+        yield from ascan(dcm.b, float(B_guess-.4), float(B_guess+.4), 60,
+                         md={'plan_name': 'ID_calibration',
+                             'mirror_stripe': stripe})
         header = db[-1]					#retrive the data (first data point is often "wrong", so don't use
         data = get_table(header)
         B = data.dcm_b[2:]

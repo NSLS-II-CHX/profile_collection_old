@@ -178,6 +178,7 @@ for camera in all_standard_pros:
 
     camera.stage_sigs[camera.roi.blocking_callbacks] = 1
     camera.stage_sigs[camera.trans1.blocking_callbacks] = 1
+    camera.stage_sigs[camera.cam.trigger_mode] = 'Fixed Rate'
 
 
 for camera in [xray_eye1_writing, xray_eye2_writing, xray_eye3_writing]:
