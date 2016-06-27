@@ -106,7 +106,8 @@ class EigerBase(AreaDetector):
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
     det_distance = ADComponent(EpicsSignalWithRBV, 'cam1:DetDist')
-    det_distance = ADComponent(EpicsSignalWithRBV, 'cam1:DetDist')
+    threshold_energy = ADComponent(EpicsSignalWithRBV, 'cam1:ThresholdEnergy')
+    photon_energy = ADComponent(EpicsSignalWithRBV, 'cam1:PhotonEnergy')
     image = Cpt(ImagePlugin, 'image1:')
     stats1 = Cpt(StatsPlugin, 'Stats1:')
     stats2 = Cpt(StatsPlugin, 'Stats2:')
@@ -185,52 +186,34 @@ for camera in [xray_eye1_writing, xray_eye2_writing, xray_eye3_writing]:
     camera.read_attrs.append('tiff')
     camera.tiff.read_attrs = []
 
+def set_eiger_defaults(eiger):
+    "Choose which attributes to read per-step (read_attrs) or per-run (configuration attrs)."
+
+    eiger.file.read_attrs = []
+    eiger.read_attrs = ['file','stats1', 'stats2', 'stats3', 'stats4', 'stats5']
+    for stats in [eiger.stats1, eiger.stats2, eiger.stats3, eiger.stats4, eiger.stats5]:
+        stats.read_attrs = ['total']
+    eiger.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance', 'cam',
+                                 'threshold_energy', 'photon_energy']
+    eiger.cam.read_attrs = []
+    eiger.cam.configuration_attrs = ['acquire_time', 'acquire_period', 'num_images']
+
+
 # Eiger 1M using internal trigger
 eiger1m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig1M}', name='eiger1m_single')
-eiger1m_single.file.read_attrs = []
-eiger1m_single.read_attrs = ['file','stats1']
-eiger1m_single.stats1.read_attrs = ['total']
-eiger1m_single.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance']
+set_eiger_defaults(eiger1m_single)
 
 # Eiger 4M using internal trigger
 eiger4m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m_single')
-eiger4m_single.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance']
-eiger4m_single.file.read_attrs = []
-eiger4m_single.read_attrs = ['file','stats1', 'stats2', 'stats3', 'stats4', 'stats5']
-eiger4m_single.stats1.read_attrs = ['total']
-eiger4m_single.stats2.read_attrs = ['total']
-eiger4m_single.stats3.read_attrs = ['total']
-eiger4m_single.stats4.read_attrs = ['total']
-eiger4m_single.stats4.read_attrs = ['total']
-eiger4m_single.stats5.read_attrs = ['total']
-
-
+set_eiger_defaults(eiger4m_single)
 
 # Eiger 1M using fast trigger assembly
 eiger1m = EigerFastTrigger('XF:11IDB-ES{Det:Eig1M}', name='eiger1m')
-eiger1m.file.read_attrs = []
-#eiger1m.read_attrs = ['file']
-eiger1m.read_attrs = ['file','stats1', 'stats2', 'stats3', 'stats4','stats5']
-eiger1m.stats1.read_attrs = ['total']
-eiger1m.stats2.read_attrs = ['total']
-eiger1m.stats3.read_attrs = ['total']
-eiger1m.stats4.read_attrs = ['total']
-eiger1m.stats4.read_attrs = ['total']
-eiger1m.stats5.read_attrs = ['total']
-
+set_eiger_defaults(eiger1m)
 
 # Eiger 4M using fast trigger assembly
 eiger4m = EigerFastTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
-#eiger4m.file.read_attrs = []
-#eiger4m.read_attrs = ['file', 'stats1']
-eiger4m.read_attrs = ['file', 'stats1', 'stats2', 'stats3', 'stats4','stats5']
-eiger4m.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance']
-#eiger4m.read_attrs = []
-eiger4m.stats1.read_attrs = ['total']
-eiger4m.stats2.read_attrs = ['total']
-eiger4m.stats3.read_attrs = ['total']
-eiger4m.stats4.read_attrs = ['total']
-eiger4m.stats5.read_attrs = ['total']
+set_eiger_defaults(eiger4m)
 
 
 # Comment this out to suppress deluge of logging messages.
