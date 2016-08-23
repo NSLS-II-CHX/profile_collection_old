@@ -5,6 +5,31 @@ def detselect(detector_object, suffix="_stats1_total"):
     gs.PLOT_Y = detector_object.name + suffix
     gs.TABLE_COLS = [gs.PLOT_Y] 
 
+def move_E(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5):
+	"""
+	change beamline energy: moving both Bragg axis and gap of IVU
+	calling sequence: move_E(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5)
+	energy: scalar!; X-ray energy in [keV] & xtal define the Bragg angle via xf.get_Bragg()
+	gap: manually entered gap value with gapmode="manual" OR calculated from xf.get_gap(energy, harm, default id map) with gapmode="auto"
+	note: currently only DCM (not DMM) is implemented
+	to-do: need PV that reflects crystal selection -> new default: xtal='current' -> using whatever xtal is currently in the beam
+	to-do: with PV above, change xtal if selected xtal is not the currently inserted one
+	"""
+	th_B=-1*xf.get_Bragg(xtal,energy)[0]
+	if gapmode == "manual":
+		if len([gap]) == len([energy])==1:
+			gap = gap
+			print('using manually entered gap value...')
+		else: print('error: function accepts only one energy and one gap value at a time')
+	elif gapmode =="auto":
+		gap=xf.get_gap(energy,harm)
+		print('using calculated gap value from xfuncs!')
+	print('moving ivu_gap to '+str(gap)[:6]+'mm   and dcm.b to '+str(th_B)[:6]+'deg')
+	ivu_gap.move(gap)	
+	dcm.b.move(th_B)
+	print('Done! New X-ray energy is '+ str(dcm.en.user_readback.value/1000)+'keV')
+	
+
 def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5, det=elm.sum_all):
 	"""
 	energy scan: Scanning both Bragg axis and gap of IVU in a linked fashion

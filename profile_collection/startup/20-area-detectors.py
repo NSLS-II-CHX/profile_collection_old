@@ -1,8 +1,9 @@
 import time as ttime  # tea time
+from datetime import datetime
 from ophyd import (ProsilicaDetector, SingleTrigger, TIFFPlugin,
                    ImagePlugin, StatsPlugin, DetectorBase, HDF5Plugin,
                    AreaDetector, EpicsSignal, EpicsSignalRO, ROIPlugin,
-                   TransformPlugin)
+                   TransformPlugin, ProcessPlugin)
 from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.areadetector.base import ADComponent, EpicsSignalWithRBV
 from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
@@ -36,7 +37,11 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
     stats4 = Cpt(StatsPlugin, 'Stats4:')
     stats5 = Cpt(StatsPlugin, 'Stats5:')
     trans1 = Cpt(TransformPlugin, 'Trans1:')
-    roi = Cpt(ROIPlugin, 'ROI1:')
+    roi1 = Cpt(ROIPlugin, 'ROI1:')
+    roi2 = Cpt(ROIPlugin, 'ROI2:')
+    roi3 = Cpt(ROIPlugin, 'ROI3:')
+    roi4 = Cpt(ROIPlugin, 'ROI4:')
+    proc1 = Cpt(ProcessPlugin, 'Proc1:')
 
 
 class StandardProsilicaWithTIFF(StandardProsilica):
@@ -114,8 +119,16 @@ class EigerBase(AreaDetector):
     stats3 = Cpt(StatsPlugin, 'Stats3:')
     stats4 = Cpt(StatsPlugin, 'Stats4:')
     stats5 = Cpt(StatsPlugin, 'Stats5:')
+    roi1 = Cpt(ROIPlugin, 'ROI1:')
+    roi2 = Cpt(ROIPlugin, 'ROI2:')
+    roi3 = Cpt(ROIPlugin, 'ROI3:')
+    roi4 = Cpt(ROIPlugin, 'ROI4:')
+    proc1 = Cpt(ProcessPlugin, 'Proc1:')
 
     shutter_mode = ADComponent(EpicsSignalWithRBV, 'cam1:ShutterMode')
+
+    # hotfix: shadow non-existant PV
+    size_link = None
 
 class EigerSingleTrigger(SingleTrigger, EigerBase):
     def __init__(self, *args, **kwargs):
@@ -177,7 +190,7 @@ for camera in all_standard_pros:
         stats_plugin.read_attrs = ['total']
         camera.stage_sigs[stats_plugin.blocking_callbacks] = 1
 
-    camera.stage_sigs[camera.roi.blocking_callbacks] = 1
+    camera.stage_sigs[camera.roi1.blocking_callbacks] = 1
     camera.stage_sigs[camera.trans1.blocking_callbacks] = 1
     camera.stage_sigs[camera.cam.trigger_mode] = 'Fixed Rate'
 

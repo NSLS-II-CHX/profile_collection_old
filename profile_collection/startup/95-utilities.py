@@ -17,7 +17,7 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     by LW 3/25/2015
     function to read energy scan file and determine offset correction
     calling sequence: E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0)
-    file: path/filename of experimental data; 'ia' opens interactive dialog
+    file: path/filename of experimental data; 'ia' opens interactive dialog; file can be databrooker object, e.g. file=db[-1] t process data from last scan
     Edge: elment used for calibration
     xtal: monochromator crystal under calibration
     B_off (optional): apply offset to Bragg angle data
@@ -41,7 +41,7 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
         descritpion=file_path
     elif isinstance(file,dict) and 'start' in file.keys():
        databroker_object=1
-       description='scan # ',header.start['scan_id'],' uid: ', header.start['uid'][:10]
+       description='scan # ',file.start['scan_id'],' uid: ', file.start['uid'][:10]
     plt.close("all")
     Edge_data={'Cu': 8.979, 'Ti': 4.966}
     if databroker_object !=1:

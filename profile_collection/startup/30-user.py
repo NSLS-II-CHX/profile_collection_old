@@ -288,7 +288,8 @@ class Sample(object):
         md_current['measure_type'] = measure_type
 
 
-        count(**md_current)
+        #count(**md_current)
+        RE(count([eiger4m_single]),**md_current)
 
 
 
@@ -462,25 +463,6 @@ class Sample(object):
         print('Move by ({:.4f}, {:.4f})'.format(dvp[0], -dvp[1]))
         self.xr(dvp[0])
         self.yr(-dvp[1])
-
-
-# LW try to write ID gap vs. energy calibration routine
-
-def ID_calibration(gap_start,gap_stop,gap_step):
-    """
-    future documentation...
-    """
-    dcm.b.timeout=1200  #make sure dcm motions don't timeout...
-    dcm.en.timeout=1200
-
-
-    # get the last dataset:
-    header = db[-1]
-    data = get_table(header)
-    x = data.dcm_b
-    y = data.xray_eye1_stats1_total
-    
-    print('jakhdsfl')
 
 
 def measurecustom1():

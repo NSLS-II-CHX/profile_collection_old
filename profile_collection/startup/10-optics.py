@@ -85,6 +85,8 @@ class DCM(Device):
 class SAXSBeamStop( Device):
 	x = Cpt( 	EpicsMotor, '-Ax:X}Mtr' )
 	y1 = Cpt( 	EpicsMotor, '-Ax:YFT}Mtr')
+	x2 = Cpt( 	EpicsMotor, '-Ax:XFB}Mtr')
+	y2 = Cpt( 	EpicsMotor, '-Ax:YFB}Mtr')
  
 
 class DMM(Device):
