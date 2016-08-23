@@ -5,7 +5,7 @@ import logging
 
 # metadata set at startup
 gs.RE.md['owner'] = 'xf11id'
-gs.RE.md['group'] = 'chx'
+
 gs.RE.md['beamline_id'] = 'CHX'
 # removing 'custom' as it is raising an exception in 0.3.2
 # gs.RE.md['custom'] = {}
