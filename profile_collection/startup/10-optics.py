@@ -150,7 +150,7 @@ xBPM =XBPM( 'XF:11IDB-BI{XBPM:02}', name = 'xBPM' )
 diff = Diffractometer('XF:11IDB-ES{Dif', name='diff')
 
 # sample beamstop
-sambst = XYMotor('XF:11IDB-OP{BS:Samp', name='sambst')
+#sambst = XYMotor('XF:11IDB-OP{BS:Samp', name='sambst')
 
 s1 = MotorCenterAndGap('XF:11IDB-OP{Slt:1', name='s1')
 k1 = Kinoform('XF:11IDB-OP{Lens:1', name='k1')  # upstream

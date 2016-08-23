@@ -38,38 +38,19 @@ for motors in [ diff, bpm2, mbs, dcm, tran, s1, s2, s4]:
     change_motor_name( motors )
     
 # Alias motors
-bst_x = diff.xv2
-sam_x = diff.xh
-sam_y = diff.yh
+#bst_x = diff.xv2
+#sam_x = diff.xh
+#sam_y = diff.yh
 #sam_z = diff_zh
 #sam_th = diff_thh
 #sam_chi = diff_chh
-sam_pitch = diff.phh
+#sam_pitch = diff.phh
 
-def W_in():
+#def W_in():
     #mov(diff.zv,0.20016)     - these were for the liquid GI-SAXS setup, Wiegart 2016-1
     #mov(diff.yv, 6.48889)
     #mov(diff.xv2,-21.8501)
-    mov(diff.zv,0.20017)
-    mov(diff.yv, 3.89974)
-    mov(diff.xv2,-21.9112)
-
-def saxs_bst_in():
-    mov(saxs_bst.x,-130.6010)
-    mov(saxs_bst.y1,-12.00)
-
-def Pt_in():
-    mov(diff.zv,0.20012)
-    #mov(diff.xv2,-4.74)
-    #mov(diff.xv2,-5.0506)
-    #mov(diff.yv,1.389)     - these were for the liquid GI-SAXS experiment, Wiegart 2016-1
-    #mov(diff.xv2,-4.8106)
-    mov(diff.yv, 3.88983)   # transmission SAXS
-    mov(diff.xv2,-9.0029)
-
-def bst_out():
-    mov(diff.xv2,-22.65)
-
+    
 def s10_in():
     mov(diff.xh,-11.695)    
     mov(diff.yh,-13.992)
@@ -107,15 +88,15 @@ def capillary1_in():
     mov(diff.yh, -4.14)
 
 def kinem_cap1_in():
-    mov(diff.xh, -4.5)
+    mov(diff.xh, -4.5) #-3.815
     mov(diff.yh, -1.2)
 
 def kinem_cap2_in():
-    mov(diff.xh, .4)
+    mov(diff.xh, .4)  #1.185
     mov(diff.yh, -1.2)
 
 def kinem_cap3_in():
-    mov(diff.xh, 5.4)
+    mov(diff.xh, 5.4) #6.185
     mov(diff.yh, -1.2)
 
 
