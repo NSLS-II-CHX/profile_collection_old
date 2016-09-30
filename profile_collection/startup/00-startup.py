@@ -25,6 +25,23 @@ import numpy as np
 RE = gs.RE  # convenience alias
 
 
+from metadatastore.mds import MDS
+# from metadataclient.mds import MDS
+from databroker import Broker
+from databroker.core import register_builtin_handlers
+from filestore.fs import FileStore
+
+mds = MDS({'host': 'xf11id-srv1',
+           'database': 'datastore',
+           'port': 27017,
+           'timezone': 'US/Eastern'}), auth=False)
+# mds = MDS({'host': CA, 'port': 7770})
+
+db = Broker(mds, FileStore({'host': 'xf11id-srv1',
+           'database': 'filestore',
+           'port': 27017})
+register_builtin_handlers(db.fs)
+
 # Subscribe metadatastore to documents.
 # If this is removed, data is not saved to metadatastore.
 import metadatastore.commands
