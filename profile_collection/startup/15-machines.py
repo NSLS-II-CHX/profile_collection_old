@@ -12,6 +12,7 @@ class Undulator(PVPositionerPC):
     stop_value = 1
 
 ivu_gap = Undulator('SR:C11-ID:G1{IVU20:1', name='ivu_gap')
+ivu_gap.readback = 'ivu_gap'
 
 # This class is defined in 10-optics.py
 fe = VirtualMotorCenterAndGap('FE:C11A-OP{Slt:12', name='fe') # Front End Slits (Primary Slits)
