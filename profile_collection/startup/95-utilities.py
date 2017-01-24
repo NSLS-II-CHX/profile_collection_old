@@ -7,11 +7,101 @@ v 0.0.1 (this version): might have created a typo in E-calibration!!!
                         added dcm_roll for calculating DCM Roll correction
 """
 
+
+def trans_data_to_pd(data, label=None,dtype='array'):
+    '''
+    convert data into pandas.DataFrame
+    Input:
+        data: list or np.array
+        label: the coloum label of the data
+        dtype: list or array
+    Output:
+        a pandas.DataFrame
+    '''
+    #lists a [ list1, list2...] all the list have the same length
+    from numpy import arange,array
+    import pandas as pd,sys    
+    if dtype == 'list':
+        data=array(data).T        
+    elif dtype == 'array':
+        data=array(data)        
+    else:
+        print("Wrong data type! Now only support 'list' and 'array' tpye")        
+    N,M=data.shape    
+    #print( N, M)
+    index =  arange( N )
+    if label is None:label=['data%s'%i for i in range(M)]
+    #print label
+    df = pd.DataFrame( data, index=index, columns= label  )
+    return df
+
+
+def export_scan_scalar( uid, x='dcm_b', y= ['xray_eye1_stats1_total'],
+                       path='/XF11ID/analysis/2016_3/commissioning/Results/exported/' ):
+    '''export uid data to a txt file
+    uid: unique scan id
+    x: the x-col 
+    y: the y-cols
+    path: save path
+    Example:
+        data = export_scan_scalar( uid, x='dcm_b', y= ['xray_eye1_stats1_total'],
+                       path='/XF11ID/analysis/2016_3/commissioning/Results/exported/' )
+    A plot for the data:
+        d.plot(x='dcm_b', y = 'xray_eye1_stats1_total', marker='o', ls='-', color='r')
+        
+    '''
+    from databroker import DataBroker as db, get_images, get_table, get_events, get_fields 
+    #from chxanalys.chx_generic_functions import  trans_data_to_pd
+    import numpy as np
+    hdr = db[uid]
+    print( get_fields( hdr ) )
+    data = get_table( db[uid] )
+    xp = data[x]
+    datap = np.zeros(  [len(xp), len(y)+1])
+    datap[:,0] = xp
+    for i, yi in enumerate(y):
+        datap[:,i+1] = data[yi]
+        
+    datap = trans_data_to_pd( datap, label=[x] + [yi for yi in y])   
+    fp = path + 'uid=%s.csv'%uid
+    datap.to_csv( fp )
+    print( 'The data was saved in %s'%fp)
+    return datap
+
+
+
+
 import bluesky.plans as bp
 
 ############
 ##################
 ####
+def plot_reflectivity(db_si,db_rh):
+	"""
+	by LW 10/04/2016
+	plot measured reflectivity R_Si / R_Rh against theoretical curve for 0.18deg incident angle
+	calling sequence: plot_reflectivity(db_si,db_rh)
+	db_si: data brooker object for reflectivity scan (E_scan) from Si layer; db_rh: same for Rh layer
+	Notes: 1) assumes E_scan was used to obtain the data
+	2) same scan range and number of data points for both scans (does not interpolate to common x-grid)
+	3) use Ti foil in BPM for scan on elm detector
+	"""
+	si_dat=get_table(db_si)
+	rh_dat=get_table(db_rh)
+	en_r=xf.get_EBragg('Si111cryo',-si_dat.dcm_b)
+	plt.figure(19)
+	plt.semilogy(en_r,si_dat.elm_sum_all/rh_dat.elm_sum_all,label='measured')
+	plt.hold(True)
+	r_eng=np.array(np.loadtxt("/home/xf11id/Downloads/R_Rh_0p180.txt"))[:,0]/1e3
+	rsi_0p18=np.array(np.loadtxt("/home/xf11id/Downloads/R_Si_0p180.txt"))[:,1]
+	rrh_0p18=np.array(np.loadtxt("/home/xf11id/Downloads/R_Rh_0p180.txt"))[:,1]
+	plt.semilogy(r_eng,rsi_0p18/rrh_0p18,'r--',label="calc 0.18 deg")
+	plt.xlabel('E [keV]')
+	plt.ylabel('R_Si / R_Rh')
+	plt.grid()
+	plt.legend()
+
+
 def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     """
     by LW 3/25/2015
@@ -137,7 +227,7 @@ def dcm_roll(Bragg,offset,distance,offmode='mm',pixsize=5.0):
     pixsize: pixel size for offset conversion to mm, if offsets are given in pixels
     default is 5um (pixsize is ignored, if offmode is 'mm')
     distance: DCM center of 1st xtal to diagnostic/slit [mm]
-    preset distances available: 'dcm_bpm',dcm_mbs', 'dcm_sample'
+    preset distances available: 'dcm_bpm',dcm_mbs', 'dcm-bds', 'dcm_sample'
     """
     import numpy as np
     from scipy import optimize
@@ -154,6 +244,8 @@ def dcm_roll(Bragg,offset,distance,offmode='mm',pixsize=5.0):
         d=2697.6 #distance dcm-mbs in mm
     elif distance=='dcm_sample':
         d=16200 #distance dcm-sample in mm
+    elif distance=='dcm_bds':
+        d=15500 #distance dcm-sample in mm
     else:
         try:
             d=float(distance)
@@ -179,7 +271,7 @@ def dcm_roll(Bragg,offset,distance,offmode='mm',pixsize=5.0):
     print('\Delta \Phi= ',p1[1]*180.0/np.pi,'deg')
     
 
-def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
+def get_ID_calibration_dan(gapstart,gapstop,gapstep=.2,gapoff=0):
     """
     by LW 04/20/2015
     function to automatically take a ID calibration curve_fit
@@ -291,7 +383,124 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
     plt.ylabel('ID gap [mm]')
     plt.title('ID gap calibration in file: '+fpath+fn,size=12)
     plt.grid()
+ 
+def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
+    """
+    by LW 04/20/2015
+
+    function to automatically take a ID calibration curve_fit
+    calling sequence: get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0)
+	gapstart: minimum gap used in calibration (if <5.2, value will be set to 5.2)
+
+	gapstop: maximum gap used in calibration
+	gapstep: size of steps between two gap points
+	gapoff: offset applied to calculation gap vs. energy from xfuncs.get_Es(gap-gapoff)
+
+	thermal management of Bragg motor is automatic, waiting for cooling <80C between Bragg scans
+    writes outputfile with fitted value for the center of the Bragg scan to:  '/home/xf11id/Repos/chxtools/chxtools/X-ray_database/
+	changes 03/18/2016: made compatible with python V3 and latest versio of bluesky (working on it!!!)
+
+    """
+    import numpy as np
+    #import xfuncs as xf
+    #from dataportal import DataBroker as db, StepScan as ss, DataMuxer as dm
+    import time
+    from epics import caput, caget
+    from matplotlib import pyplot as plt
+    from scipy.optimize import curve_fit
+    gaps = np.arange(gapstart, gapstop, gapstep) - gapoff   # not sure this should be '+' or '-' ...
+    print('ID calibration will contain the following gaps [mm]: ',gaps)
+    xtal_map = {1: 'Si111cryo', 2: 'Si220cryo'}
+    pos_sts_pv = 'XF:11IDA-OP{Mono:DCM-Ax:X}Pos-Sts'
+    try:
+        xtal = xtal_map[caget(pos_sts_pv)]
+    except KeyError:
+        raise CHX_utilities_Exception('error: trying to do ID gap calibration with no crystal in the beam')
+    print('using', xtal, 'for ID gap calibration')
+    # create file for writing calibration data:
+    fn='id_CHX_IVU20_'+str(time.strftime("%m"))+str(time.strftime("%d"))+str(time.strftime("%Y"))+'.dat'
+    #fpath='/tmp/'
+    fpath='/home/xf11id/Repos/chxtools/chxtools/X-ray_database/'
+    try:
+        outFile = open(fpath+fn, 'w')
+        outFile.write('% data from measurements '+str(time.strftime("%D"))+'\n')
+        outFile.write('% K colkumn is a placeholder! \n')
+        outFile.write('% ID gap [mm]     K      E_1 [keV] \n')
+        outFile.close()
+        print('successfully created outputfile: ',fpath+fn)
+    except:
+        raise CHX_utilities_Exception('error: could not create output file')
     
+    ### do the scanning and data fitting, file writing,....
+    t_adjust=0
+    center=[]
+    E1=[]
+    realgap=[]
+    detselect(xray_eye1)
+    print(gaps)
+    MIN_GAP = 5.2
+    for i in gaps:
+        if i >= MIN_GAP: 
+            B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i+gapoff,5)[1])[0]
+        else:
+            i = MIN_GAP 
+            B_guess=-1.0*xf.get_Bragg(xtal,xf.get_Es(i,5)[1])[0]
+        if i > 8 and t_adjust == 0:     # adjust acquistion time once while opening the gap (could write something more intelligent in the long run...)
+           exptime=caget('XF:11IDA-BI{Bpm:1-Cam:1}cam1:AcquireTime')
+           caput('XF:11IDA-BI{Bpm:1-Cam:1}cam1:AcquireTime',2*exptime)
+           t_adjust = 1
+        print('initial guess: Bragg= ',B_guess,' deg.   ID gap = ',i,' mm')
+        es = xf.get_Es(i, 5)[1]
+        mirror_stripe_pos = round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1)
+        SI_STRIPE = -7.5
+        RH_STRIPE = 7.5
+        if es < 9.5:
+            stripe = SI_STRIPE
+        elif es >= 9.5:
+            stripe = RH_STRIPE
+        mov(hdm.y, stripe)
+        mov(foil_y, 0)  # Put YAG in beam.
+        print('moving DCM Bragg angle to:', B_guess ,'deg and ID gap to', i, 'mm')
+        #RE(bp.abs_set(dcm.b, B_guess))
+        mov(dcm.b, B_guess)
+        #RE(bp.abs_set(ivu_gap,i))
+        mov(ivu_gap,i)
+        print('hurray, made it up to here!')
+        print('about to collect data')
+        RE(ascan(dcm.b, float(B_guess-.4), float(B_guess+.4), 60))
+        header = db[-1]					#retrive the data (first data point is often "wrong", so don't use
+        data = get_table(header)
+        B = data.dcm_b[2:]
+        intdat = data.xray_eye1_stats1_total[2:] 																	
+        B=np.array(B)
+        intdat=np.array(intdat)
+        A=np.max(intdat)          # initial parameter guess and fitting
+        xc=B[np.argmax(intdat)]
+        w=.2
+        yo=np.mean(intdat)
+        p0=[yo,A,xc,w]
+        print('initial guess for fitting: ',p0)
+        try:
+            coeff,var_matrix = curve_fit(gauss,B,intdat,p0=p0)
+            center.append(coeff[2])
+            E1.append(xf.get_EBragg(xtal,-coeff[2])/5.0)
+            realgap.append(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))
+#   # append data file by i, 1 & xf.get_EBragg(xtal,-coeff[2]/5.0):
+            with open(fpath+fn, "a") as myfile:
+                myfile.write(str(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))+'    1.0 '+str(float(xf.get_EBragg(xtal,-coeff[2])/5.0))+'\n')
+            print('added data point: ',caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'),' ',1.0,'     ',str(float(xf.get_EBragg(xtal,-coeff[2])/5.0)))
+        except: print('could not evaluate data point for ID gap = ',i,' mm...data point skipped!')
+        while caget('XF:11IDA-OP{Mono:DCM-Ax:Bragg}T-I') > 80:
+            time.sleep(30)
+            print('DCM Bragg axis too hot (>80C)...waiting...')
+    plt.close(234)
+    plt.figure(234)
+    plt.plot(E1,realgap,'ro-')
+    plt.xlabel('E_1 [keV]')
+    plt.ylabel('ID gap [mm]')
+    plt.title('ID gap calibration in file: '+fpath+fn,size=12)
+    plt.grid()
+   
         
 class CHX_utilities_Exception(Exception):
     pass
