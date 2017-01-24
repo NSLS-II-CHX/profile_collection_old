@@ -16,6 +16,97 @@
 ##        print (i)
 ##        i=i+1
 
+#RE = gs.RE  # convenience alias
+
+def capillary_bottom_in():
+    ''' This function is wrote for Sandro's three samples, Nov 2, 2016'''
+    mov(diff.xh,0.45)
+    RE.md['sample']='S2_reference_sample'
+    RE.md['sample_description']='Au_30nm_in_0.6mole_glycerol aqueous solution'
+    mov(diff.yh,0.37)
+
+def capillary_middle_in():
+    mov(diff.xh, 0.45)
+    RE.md['sample']='g_0.15'
+    RE.md['sample_description']='Au_30nm_in_0.15mole_glycerol aqueous solution'
+    mov(diff.yh, 5.5)
+
+def capillary_top_in():
+    mov(diff.xh, 0.45)
+    RE.md['sample']='g_0.1'
+    RE.md['sample_description']='Au_30nm_in_0.1mole_glycerol aqueous solution'
+    mov(diff.yh, 10.5)
+
+
+def xpcs_measure(   Measurement ):
+        ''' XPCS routine, Nov 3, 2016'''
+        T =     caget( 'XF:11IDB-ES{Env:01-Chan:C}T-I')     
+        RE.md['Temperature']= T
+        print( RE.md )
+        take_xpcs_series(  Measurement  + '--T=%s'%T )
+
+def xpcs_measure_not_used(  pos, Measurement ):
+    ''' This function is wrote for Sandro's three samples, Nov 2, 2016'''
+
+    T =     caget( 'XF:11IDB-ES{Env:01-Chan:C}T-I')
+    if pos=='bottom':
+        capillary_bottom_in()
+        print('It will measure the bottom cappilary')
+    elif pos=='middle':
+        capillary_middle_in()
+        print('It will measure the middle cappilary')
+    elif pos=='top':
+        capillary_bottom_in()
+        print('It will measure the top cappilary') 
+        
+    RE.md['Temperature']= T
+
+    take_xpcs_series( 'S2' + '--'+ Measurement  + '--T=%s'%T )
+
+
+
+
+def measure_bottom( T, Measurement ):
+    ''' This function is wrote for Sandro's three samples, Nov 2, 2016'''
+    capillary_bottom_in()
+    RE.md['sample']='S2_reference_sample'
+    RE.md['sample_description']='Au_30nm_in_0.6mole_glycerol aqueous solution'
+    RE.md['Temperature']= T
+    take_xpcs_series( 'S2' + '--'+ Measurement  + '--T=%s'%T )
+
+def measure_middle( T, Measurement ):
+    ''' This function is wrote for Sandro's three samples, Nov 2, 2016'''
+    capillary_middle_in()
+    RE.md['sample']='g_0.15'
+    RE.md['sample_description']='Au_30nm_in_0.15mole_glycerol aqueous solution'
+    RE.md['Temperature']= T
+    take_xpcs_series( RE.md['sample'] + '--'+ Measurement  + '--T=%s'%T )
+
+def measure_top( T, Measurement ):
+    ''' This function is wrote for Sandro's three samples, Nov 2, 2016'''
+    capillary_top_in()
+    RE.md['sample']='g_0.1'
+    RE.md['sample_description']='Au_30nm_in_0.1mole_glycerol aqueous solution'
+    RE.md['Temperature']= T
+    take_xpcs_series( RE.md['sample'] + '--'+ Measurement  + '--T=%s'%T )
+
+
+def take_xpcs_series( Measurement   ):
+    '''
+    Oct 24, 2016, for Pierce measurements
+    Open fast shutter, stay one second, 
+    Switch X/Y BPM feedback
+    Take count
+    '''
+    RE( bp.abs_set( fast_sh, 1 )  )
+    sleep(1)
+    xbpm_y_pos = 'XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP'
+    xbpm_x_pos = 'XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP'
+    caput( xbpm_y_pos, 1 ) 
+    caput( xbpm_x_pos, 1 )
+    RE(count([eiger4m_single]),Measurement= Measurement  )
+
+
 
 
 def count_saxs(type, fnum=1,  expt= 0.1, acqt = None, att_t = 1,
