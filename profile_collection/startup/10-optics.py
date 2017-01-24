@@ -52,6 +52,11 @@ class MotorSlits(Blades, MotorCenterAndGap):
 
 class VirtualMotorSlits(Blades, VirtualMotorCenterAndGap):
     "combine t b i o and xc yc xg yg"
+#    def __init__(self, *args, **kwargs):
+#      super().__init__(*args, **kwargs)
+#        self.xc.readback.name = self.name
+#		self.yc.readback.name = self.name
+ #       self.xg.readback.name = self.name
     pass
 
 
@@ -177,12 +182,25 @@ bpm2 = XYMotor('XF:11IDB-BI{BPM:2', name='bpm2')
 
 w1 = XYMotor('XF:11IDB-OP{Win:1', name='w1')  # window positioners
 hdm = HorizontalDiffractionMirror('XF:11IDA-OP{Mir:HDM', name='hdm')
-gsl = VirtualMotorCenterAndGap('XF:11IDB-OP{Slt:Guard', name='gs1')  #Guard rSlits (SmarAct)
+gsl = VirtualMotorCenterAndGap('XF:11IDB-OP{Slt:Guard', name='gsl')  #Guard rSlits (SmarAct)
+#gsl = VirtualMotorSlits('XF:11IDB-OP{Slt:Guard', name='gsl')  #Guard rSlits (SmarAct)
+
 
 
 #SAXS beam stop
 saxs_bst = SAXSBeamStop( 'XF:11IDB-ES{BS:SAXS', name = 'saxs_bst' )
  
+#To solve the "KeyError Problem" when doing dscan and trying to save to a spec file, Y.G., 20170110
+gsl.xc.readback.name = 'gsl_xc'
+gsl.yc.readback.name = 'gsl_yc'
+gsl.xg.readback.name = 'gsl_xg'
+gsl.yg.readback.name = 'gsl_yg'
+
+mbs.xc.readback.name = 'mbs_xc'
+mbs.yc.readback.name = 'mbs_yc'
+mbs.xg.readback.name = 'mbs_xg'
+mbs.yg.readback.name = 'mbs_yg'
+
 
 
 
