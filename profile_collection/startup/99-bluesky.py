@@ -55,6 +55,31 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5, det=elm.sum
 	plan = PlanND([det],inner)
 	RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
 			
+def samy_dscan(start, end, points):
+    """
+    sampley relative scan using the eiger1m_single detector
+    achieves a y motion by combining the incline (diff.xv) and diff.zh
+    calling sequence: samy_dscan(start, end, points)
+    Note - its a relative scan, start and end are relative from current position
+    by YZ, AF Oct 2016	
+    """
+    from cycler import cycler
+    from bluesky import PlanND
+    initial_xv = diff.xv.user_readback.value
+    initial_zh = diff.xh.user_readback.value
+    suffix="_stats1_total"
+    det=eiger1m_single
+    angle=9.0*np.pi/180.0
+    dy_values= np.linspace( start, end, points)
+    xv_values = dy_values/np.sin( angle ) + initial_xv 
+    zh_values = -1* dy_values/np.tan( angle ) + initial_zh
+    inner = cycler(diff.xv, xv_values)+cycler(diff.xh, zh_values)
+    plan = PlanND([det],inner)
+    RE(plan, [LiveTable([diff.xv,diff.xh,det  ]),LivePlot(x='diff_xv',y=det.name+suffix,fig = plt.figure())])
+    diff.xv.set(initial_xv)
+    diff.xh.set(initial_zh)
+
+
 
 def chx_plot_motor(scan):
     fig = None
@@ -87,7 +112,10 @@ def get_epics_motors():
     return {name: obj for name, obj in globals().items() if isinstance(obj, (EpicsMotor))}
 
 
-gs.specpath = os.path.expanduser('/home/xf11id/specfiles/spec0.spec')
+#gs.specpath = os.path.expanduser('/home/xf11id/specfiles/spec0.spec')
+gs.specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_01_11.spec')
+
+
 #live_specfile_callback = LiveSpecFile()
 #gs.RE.subscribe('all', live_specfile_callback)
 
@@ -129,11 +157,15 @@ def relabel_figure(fig, new_title):
 
 
 from suitcase.spec import DocumentToSpec
-spec_cb = DocumentToSpec('/home/xf11id/specfiles/testing.spec')
+#spec_cb = DocumentToSpec('/home/xf11id/specfiles/testing.spec')
+spec_cb = DocumentToSpec('/home/xf11id/specfiles/chx_spec_2017_01_11.spec')
+
 
 import bluesky.spec_api
 from bluesky.plans import planify, subs_context
 from functools import wraps
+
+ 
 
 @wraps(bluesky.spec_api.dscan)
 @planify
