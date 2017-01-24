@@ -1,8 +1,5 @@
-
 from bluesky.plans import DeltaScanPlan
 from bluesky.callbacks import LiveTable, LivePlot
-
-
 subs = [LiveTable(['ivu_gap', 'xray_eye3_stats1_total', 'xray_eye3_stats1_total']), 
         LivePlot('xray_eye3_stats1_total', 'ivu_gap')]
 print(ivu_gap.read())
