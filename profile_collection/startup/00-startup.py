@@ -34,18 +34,15 @@ from filestore.fs import FileStore
 mds = MDS({'host': 'xf11id-srv1',
            'database': 'datastore',
            'port': 27017,
-           'timezone': 'US/Eastern'}), auth=False)
+           'timezone': 'US/Eastern'}, auth=False)
 # mds = MDS({'host': CA, 'port': 7770})
 
 db = Broker(mds, FileStore({'host': 'xf11id-srv1',
            'database': 'filestore',
-           'port': 27017})
+           'port': 27017}))
 register_builtin_handlers(db.fs)
 
-# Subscribe metadatastore to documents.
-# If this is removed, data is not saved to metadatastore.
-import metadatastore.commands
-gs.RE.subscribe_lossless('all', metadatastore.commands.insert)
+gs.RE.subscribe('all', db.mds.insert)
 
 from epics import caput, caget
 
@@ -57,7 +54,7 @@ gs.MD_TIME_KEY = 'count_time'  # this will the default in bluesky v0.5.3+
 from chxtools import attfuncs as att
 from chxtools import xfuncs as xf
 from chxtools.bpm_stability import bpm_read
-from chxtools import transfuncs as trans
+from chxtools import transfuncs as trans  
 
 
 #from chxtools import bpm_stability as bpmst
