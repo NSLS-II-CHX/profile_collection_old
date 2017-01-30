@@ -261,6 +261,7 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
 		caput('XF:11IDB-ES{Env:01-Out:2}T-SP',273.15+start_T2)
 		if cool_ramp==0:																				# print message and make Olog entry, if requested
 			print('cooling Channel C to '+str(Tsetpoint)+'deg, no ramp')
+			sleep(5)  # need time to update setpoint....
 			if log_entry == 'on':
 				try:
 					olog_client.log( 'Changed temperature to T='+ str(caget('XF:11IDB-ES{Env:01-Out:1}T-SP')-273.15)[:5]+'C, ramp: off')
@@ -285,7 +286,8 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
 		caput('XF:11IDB-ES{Env:01-Out:1}T-SP',273.15+Tsetpoint)	# setting channel C to Tsetpoint
 		caput('XF:11IDB-ES{Env:01-Out:2}T-SP',233.15+Tsetpoint) # setting channel B to Tsetpoint-40C
 	elif start_T<Tsetpoint:		#heating requested, ramp on
-		print('heating Channel C to '+str(Tsetpoint)+'deg @ '+str(heat_ramp)+'deg./min')	
+		print('heating Channel C to '+str(Tsetpoint)+'deg @ '+str(heat_ramp)+'deg./min')
+		sleep(5)	
 		if log_entry == 'on':
 			try:
 				olog_client.log( 'Changed temperature to T='+ str(caget('XF:11IDB-ES{Env:01-Out:1}T-SP')-273.15)[:5]+'C, ramp: '+str(heat_ramp)+'deg./min')
@@ -313,6 +315,7 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
 def wait_temperature(wait_time=1200,dead_band=1.,channel=1,log_entry='on'):
 	"""
 	"""
+	sleep(5) # make sure previous changes to the Lakehsore settings are updated...
 	ch=['none','XF:11IDB-ES{Env:01-Chan:A}T:C-I','XF:11IDB-ES{Env:01-Chan:B}T:C-I','XF:11IDB-ES{Env:01-Chan:C}T:C-I','XF:11IDB-ES{Env:01-Chan:D}T:C-I']
 	#check on which temperature the selected channel feedbacks:
 	if channel==1:
@@ -323,7 +326,7 @@ def wait_temperature(wait_time=1200,dead_band=1.,channel=1,log_entry='on'):
 	elif channel==2:
 		ch_num=caget('XF:11IDB-ES{Env:01-Out:2}Out-Sel')
 		ramp=caget('XF:11IDB-ES{Env:01-Out:2}Val:Ramp-RB')
-		T_set=caget('XF:11IDB-ES{Env:1-Out:2}T-SP') - 273.15
+		T_set=caget('XF:11IDB-ES{Env:01-Out:2}T-SP') - 273.15
 		ramp_on=caget('XF:11IDB-ES{Env:01-Out:2}Enbl:Ramp-Sel')
 	else: raise check_Exception('error: control channel has to be either "1" or "2"!')
 	curr_T=caget(ch[ch_num])
@@ -338,9 +341,9 @@ def wait_temperature(wait_time=1200,dead_band=1.,channel=1,log_entry='on'):
 	# initial wait for reaching setpoint temperature
 	dT=T_set-caget(ch[ch_num])
 	while abs(dT)>2*dead_band:
-		sleep(min([dtime*60,300]))		# get an update after max 5 minutes...
-		dtime=1./get_T_gradient(channel)
-		dT=T_set-caget(ch[ch_num]) 
+		sleep(min([abs(dtime)*60,300]))		# get an update after max 5 minutes...
+		dtime=(T_set-caget(ch[ch_num]))/(abs(get_T_gradient(channel))+.1)
+		dT=T_set-caget(ch[ch_num])  #why was this commented??
 		print(time.ctime()+ '       updated estimate to reach T='+str(T_set)[:5]+'C on channel '+caget('XF:11IDB-ES{Env:01-Out:1}Out-Sel','char')+': '+str(dtime)[:5]+' minutes    current temperature: '+str(caget(ch[ch_num]))[:5]+'C')
 	print('hurray! temperature within 2x deadband! Going to check for stability....waiting max 1x wait_time to stabilize + 1x wait_time!')
 	check=0
