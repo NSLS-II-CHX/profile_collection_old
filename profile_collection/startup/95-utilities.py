@@ -7,6 +7,154 @@ v 0.0.1 (this version): might have created a typo in E-calibration!!!
                         added dcm_roll for calculating DCM Roll correction
 """
 
+def plot1D( y,x=None, yerr=None, ax=None,return_fig=False, ls='-', 
+           legend_size=None, lw=None, *argv,**kwargs):    
+    """a simple function to plot two-column data by using matplotlib.plot
+    pass *argv,**kwargs to plot
+    
+    Parameters
+    ----------
+    y: column-y
+    x: column-x, by default x=None, the plot will use index of y as x-axis
+    Returns
+    -------
+    None
+    """     
+    if ax is None:
+        if RUN_GUI:
+            fig = Figure()
+            ax = fig.add_subplot(111)
+        else:
+            fig, ax = plt.subplots()
+        
+    if 'legend' in kwargs.keys():
+        legend =  kwargs['legend']  
+    else:
+        legend = ' '
+
+    try:
+         logx = kwargs['logx']
+    except:
+        logx=False
+    try:
+         logy = kwargs['logy']
+    except:
+        logy=False
+        
+    try:
+         logxy = kwargs['logxy']
+    except:
+        logxy= False        
+
+    if logx==True and logy==True:
+        logxy = True
+        
+    try:
+        marker = kwargs['marker']         
+    except:
+        try:
+            marker = kwargs['m'] 
+        except:            
+            marker= next(  markers_    )
+    try:
+        color =  kwargs['color']
+    except:    
+        try:
+            color =  kwargs['c']
+        except: 
+            color = next(  colors_    ) 
+            
+    if x is None:
+        x=range(len(y))
+    if yerr is None:    
+        ax.plot(x,y, marker=marker,color=color,ls=ls,label= legend, lw=lw)#,*argv,**kwargs)
+    else:
+        ax.errorbar(x,y,yerr, marker=marker,color=color,ls=ls,label= legend, lw=lw)#,*argv,**kwargs)
+    if logx:
+        ax.set_xscale('log')
+    if logy:
+        ax.set_yscale('log')
+    if logxy:
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+         
+ 
+    
+    if 'xlim' in kwargs.keys():
+         ax.set_xlim(    kwargs['xlim']  )    
+    if 'ylim' in kwargs.keys():
+         ax.set_ylim(    kwargs['ylim']  )
+    if 'xlabel' in kwargs.keys():            
+        ax.set_xlabel(kwargs['xlabel'])
+    if 'ylabel' in kwargs.keys():            
+        ax.set_ylabel(kwargs['ylabel'])
+        
+    if 'title' in kwargs.keys():
+        title =  kwargs['title']
+    else:
+        title =  'plot'
+    ax.set_title( title ) 
+    #ax.set_xlabel("$Log(q)$"r'($\AA^{-1}$)')    
+    ax.legend(loc = 'best', fontsize=legend_size )
+    if 'save' in kwargs.keys():
+        if  kwargs['save']: 
+            #dt =datetime.now()
+            #CurTime = '%s%02d%02d-%02d%02d-' % (dt.year, dt.month, dt.day,dt.hour,dt.minute)         
+            #fp = kwargs['path'] + '%s'%( title ) + CurTime + '.png'  
+            fp = kwargs['path'] + '%s'%( title )   + '.png' 
+            plt.savefig( fp, dpi=fig.dpi)         
+    if return_fig:
+        return fig
+
+
+def fit_gisaxs_height_scan_profile( uid='-1', x0=0, k=2, A=1, base=0, 
+                             motor = 'diff_yh', det =  'eiger4m_single_stats1_total' ):
+
+    '''Fit a GiSAXS scan (diff.yh scan) by a error function
+    
+       The scan data is first normlized by a simple normalization function:
+            (y - y.min()) / (y.max() - y.min())        
+       Then fit by error function is defined as  base - A * erf(k*(x-x0))
+           erf is Error function is defined by 2/sqrt(pi)*integral(exp(-t**2), t=0..z)
+           erf function is import: from scipy.special import erf
+       
+       Parameters:
+           x0: the fit center, by default, 0
+           k: the strech factor, by default 2
+           A: amplitude of the scan, default 1
+           base: baseline of the scan, default 0
+       
+           uid: the uid of the scan, by default is -1, i.e., the last scan
+           motor: the scan motor, by default 'diff.yh'
+           det: detector, by default is 'eiger4m_single_stats1_total'
+      return:
+           the plot of scan and fitted curve
+           the fitted x0      
+    '''
+    
+    from lmfit import  Model
+    from lmfit import minimize, Parameters, Parameter, report_fit
+    from scipy.special import erf
+    def norm_y(y ):
+        return (y - y.min()) / (y.max() - y.min())
+    def err_func(x, x0, k=2, A=1,  base=0 ):        
+        return base - A * erf(k*(x-x0))
+    
+    mod = Model(  err_func )
+    pars  = mod.make_params( x0=x0, k=k,  A = A, base = base )    
+    if uid == '-1':
+        uid = -1
+    x = np.array( get_table( db[uid],  fields = [motor],  )[motor] ) 
+    y = np.array( get_table( db[uid],  fields = [det],  )[det] )
+    ym = norm_y(y)    
+    result = mod.fit(ym, pars, x = x )
+    
+    fig, ax = plt.subplots()
+    plot1D( x=x, y = ym, m='o', c='k', ls ='', legend='scan',ax=ax,)
+    plot1D( x=x, y = result.best_fit,m='', c='r', ls='-',  legend='fit-x0=%s'%result.best_values['x0'],ax=ax,)
+    
+    return result.best_values['x0']
+
 
 def trans_data_to_pd(data, label=None,dtype='array'):
     '''
