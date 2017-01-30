@@ -1,9 +1,43 @@
+import bluesky.plans as bp
 
 def detselect(detector_object, suffix="_stats1_total"):
     """Switch the active detector and set some internal state"""
     gs.DETS =[detector_object]
     gs.PLOT_Y = detector_object.name + suffix
     gs.TABLE_COLS = [gs.PLOT_Y] 
+
+
+def xpcs_count(detectors, *, md=None):
+    """
+    Similar to `count`
+
+    Customized to provide access to files before acquisition completes.
+    """
+
+    md = md or {}
+    _md = {'plan_name': 'xpcs',
+           'detectors': [det.name for det in detectors]}
+    _md.update(md)
+
+    table = LiveTable([])  # a simple table with seq_num and time
+
+    @bp.subs_decorator([table])
+    @bp.stage_decorator(detectors)
+    @bp.run_decorator(md=md)
+    def inner_xpcs():
+        yield from bp.checkpoint()
+        yield from bp.create()
+        for det in detectors:
+            # Start acquisition.
+            yield from bp.trigger(det)
+            # Read the UID that points to this dataset in progress.
+            yield from bp.read(det)
+        # Insert an 'Event' document into databroker. Now we can access the (partial) dataset.
+        yield from bp.save()
+        # *Now* wait for the detector to actual finish acquisition.
+        yield from bp.wait()  
+
+    return (yield from inner_xpcs())
 
 def move_E(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5):
 	"""
@@ -54,6 +88,23 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5, det=elm.sum
 	#plan = PlanND([det],inner)
 	plan = PlanND([det],inner)
 	RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
+
+#### crude test only!!! ####
+def refl_scan(incident_angle):
+	from cycler import cycler
+	from bluesky import PlanND
+	det=eiger1m_single
+	inner = cycler(diff.phh,-1*incident_angle)+cycler(diff.gam,-2*incident_angle)
+	plan = PlanND([det],inner)
+	RE(plan, [LiveTable([diff.phh,diff.gam,det]),LivePlot(x='diff_phi',y=det.name+"_stats1_total",fig = plt.figure())])
+	### Live plot su$$$s!!! -> plot after the fact...
+	dat=get_table(db[-1])
+	plt.figure(97)
+	plt.semilogy(dat.diff_phh,dat.eiger1m_single_stats1_total)
+
+	
+	
+	
 			
 def samy_dscan(start, end, points):
     """
@@ -130,6 +181,7 @@ class print_scan_id(CallbackBase):
 
     def stop(self, doc):
         print("The scan ID is: %s" %self._scan_id)
+
 RE.subscribe('all', print_scan_id())
 
 
