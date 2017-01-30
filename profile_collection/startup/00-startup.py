@@ -1,24 +1,41 @@
 import logging
-# Make ophyd listen to pyepics.
-from ophyd import setup_ophyd
-setup_ophyd()
+import time
+from contextlib import contextmanager
 
-import matplotlib.pyplot as plt
-plt.ion()
-# Make plots update live while scans run.
-from bluesky.utils import install_qt_kicker
-install_qt_kicker()
+@contextmanager
+def progress(text):
+    start = time.time()
+    print(text)
+    yield
+    print('Done in %f.1 seconds' % (time.time() - start))
 
-# convenience imports
-from ophyd.commands import *
-from bluesky.callbacks import *
-# from bluesky.scientific_callbacks import plot_peak_stats
-# from bluesky.plans import *
-from bluesky.plan_tools import print_summary
-from bluesky.spec_api import *
-from bluesky.global_state import gs, abort, stop, resume
-from databroker import (DataBroker as db, get_events, get_images,
-                        get_table, get_fields, restream, process)
+with progress('setting up ophyd'):
+    # Make ophyd listen to pyepics.
+    from ophyd import setup_ophyd
+    setup_ophyd()
+
+with progress('importing matplotlib'):
+    import matplotlib.pyplot as plt
+    plt.ion()
+
+with progress('qt kicking'):
+    # Make plots update live while scans run.
+    from bluesky.utils import install_qt_kicker
+    install_qt_kicker()
+
+with progress('ophyd, bluesky imports'):
+    # convenience imports
+    from ophyd.commands import *
+    from bluesky.callbacks import *
+    # from bluesky.scientific_callbacks import plot_peak_stats
+    # from bluesky.plans import *
+    from bluesky.plan_tools import print_summary
+    from bluesky.spec_api import *
+    from bluesky.global_state import gs, abort, stop, resume
+
+with progress('databroker import'):
+    from databroker import (DataBroker as db, get_events, get_images,
+                            get_table, get_fields, restream, process)
 from time import sleep
 import numpy as np
 
@@ -57,4 +74,4 @@ from chxtools.bpm_stability import bpm_read
 from chxtools import transfuncs as trans  
 
 
-#from chxtools import bpm_stability as bpmst
+from chxtools import bpm_stability as bpmst
