@@ -8,7 +8,8 @@ from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.areadetector.base import ADComponent, EpicsSignalWithRBV
 from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
                                                  FileStoreHDF5IterativeWrite,
-                                                 FileStoreBase, new_short_uid)
+                                                 FileStoreBase, new_short_uid,
+                                                 FileStoreIterativeWrite)
 from ophyd import Component as Cpt, Signal
 from ophyd.utils import set_and_wait
 import filestore.api as fs
@@ -23,13 +24,18 @@ import filestore.api as fs
 
 
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
+    """Add this as a component to detectors that write TIFFs."""
     pass
 
 
+class TIFFPluginEnsuredOff(TIFFPlugin):
+    """Add this as a component to detectors that do not write TIFFs."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stage_sigs.update([(self.auto_save, 'No')])
+
+
 class StandardProsilica(SingleTrigger, ProsilicaDetector):
-    # tiff = Cpt(TIFFPluginWithFileStore,
-    #           suffix='TIFF1:',
-    #           write_path_template='/XF11ID/data/')
     image = Cpt(ImagePlugin, 'image1:')
     stats1 = Cpt(StatsPlugin, 'Stats1:')
     stats2 = Cpt(StatsPlugin, 'Stats2:')
@@ -42,6 +48,10 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
     roi3 = Cpt(ROIPlugin, 'ROI3:')
     roi4 = Cpt(ROIPlugin, 'ROI4:')
     proc1 = Cpt(ProcessPlugin, 'Proc1:')
+
+    # This class does not save TIFFs. We make it aware of the TIFF plugin
+    # only so that it can ensure that the plugin is not auto-saving.
+    tiff = Cpt(TIFFPluginEnsuredOff, suffix='TIFF1:')
 
 
 class StandardProsilicaWithTIFF(StandardProsilica):
@@ -69,33 +79,17 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
         set_and_wait(self.file_write_name_pattern, '{}_$id'.format(res_uid))
         super().stage()
         fn = os.path.join(self.file_path.get(), res_uid)
-        res_kwargs = {'frame_per_point': self.get_frames_per_point()}
+        ipf = int(self.file_write_images_per_file.get())
         # logger.debug("Inserting resource with filename %s", fn)
-        self._resource = fs.insert_resource('AD_EIGER', fn, res_kwargs)
-
-    def get_frames_per_point(self):
-        # TODO Get this from the fast trigger.
-        return 1  # this is a placeholder, a lie
+        self._resource = fs.insert_resource('AD_EIGER2', fn, {'images_per_file': ipf})
 
     def generate_datum(self, key, timestamp):
-        # This code is similar (not identical) to FileStoreBulkWrite.
-        "Stash kwargs for each datum, to be used below by unstage."
         uid = super().generate_datum(key, timestamp)
-        i = next(self._point_counter)
+        # The detector keeps its own counter which is uses label HDF5 sub-files.
+        # We access that counter via the sequence_id signal and stash it in the datum.
         seq_id = 1 + int(self.sequence_id.get())  # det writes to the NEXT one
-        self._datum_kwargs_map[uid] = {'seq_id': seq_id}
-        # (don't insert, obviously)
+        fs.insert_datum(self._resource, uid, {'seq_id': seq_id})
         return uid
-
-    def unstage(self):
-        # This code is indentical to FileStoreBulkWrite -- refactor it out
-        "Insert all datums at the end."
-        for readings in self._datum_uids.values():
-            for reading in readings:
-                uid = reading['value']
-                kwargs = self._datum_kwargs_map[uid]
-                fs.insert_datum(self._resource, uid, kwargs)
-        return super().unstage()
 
 
 class EigerBase(AreaDetector):
