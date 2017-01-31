@@ -7,6 +7,49 @@ v 0.0.1 (this version): might have created a typo in E-calibration!!!
                         added dcm_roll for calculating DCM Roll correction
 """
 
+
+import itertools 
+markers =  ['o',   'H', 'D', 'v',  '^', '<',  '>', 'p',
+                's',  'h',   '*', 'd', 
+            '$I$','$L$', '$O$','$V$','$E$', 
+            '$c$', '$h$','$x$','$b$','$e$','$a$','$m$','$l$','$i$','$n$', '$e$',
+            '8', '1', '3', '2', '4',     '+',   'x',  '_',   '|', ',',  '1',]
+
+markers = np.array(   markers *100 )
+colors = np.array( ['darkorange', 'mediumturquoise', 'seashell', 'mediumaquamarine', 'darkblue', 
+           'yellowgreen',  'mintcream', 'royalblue', 'springgreen', 'slategray',
+           'yellow', 'slateblue', 'darkslateblue', 'papayawhip', 'bisque', 'firebrick', 
+           'burlywood',  'dodgerblue', 'dimgrey', 'chartreuse', 'deepskyblue', 'honeydew', 
+           'orchid',  'teal', 'steelblue', 'limegreen', 'antiquewhite', 
+           'linen', 'saddlebrown', 'grey', 'khaki',  'hotpink', 'darkslategray', 
+           'forestgreen',  'lightsalmon', 'turquoise', 'navajowhite', 
+            'darkgrey', 'darkkhaki', 'slategrey', 'indigo',
+           'darkolivegreen', 'aquamarine', 'moccasin', 'beige', 'ivory', 'olivedrab',
+           'whitesmoke', 'paleturquoise', 'blueviolet', 'tomato', 'aqua', 'palegoldenrod', 
+           'cornsilk', 'navy', 'mediumvioletred', 'palevioletred', 'aliceblue', 'azure', 
+             'orangered', 'lightgrey', 'lightpink', 'orange', 'lightsage', 'wheat', 
+           'darkorchid', 'mediumslateblue', 'lightslategray', 'green', 'lawngreen', 
+           'mediumseagreen', 'darksalmon', 'pink', 'oldlace', 'sienna', 'dimgray', 'fuchsia',
+           'lemonchiffon', 'maroon', 'salmon', 'gainsboro', 'indianred', 'crimson',
+            'mistyrose', 'lightblue', 'darkgreen', 'lightgreen', 'deeppink', 
+           'palegreen', 'thistle', 'lightcoral', 'lightgray', 'lightskyblue', 'mediumspringgreen', 
+           'mediumblue', 'peru', 'lightgoldenrodyellow', 'darkseagreen', 'mediumorchid', 
+           'coral', 'lightyellow', 'chocolate', 'lavenderblush', 'darkred', 'lightseagreen', 
+           'darkviolet', 'lightcyan', 'cadetblue', 'blanchedalmond', 'midnightblue', 
+           'darksage', 'lightsteelblue', 'darkcyan', 'floralwhite', 'darkgray', 
+           'lavender', 'sandybrown', 'cornflowerblue', 'sage',  'gray', 
+           'mediumpurple', 'lightslategrey',   'seagreen', 
+           'silver', 'darkmagenta', 'darkslategrey', 'darkgoldenrod', 'rosybrown', 
+           'goldenrod',   'darkturquoise', 'plum',
+                 'purple',   'olive', 'gold','powderblue',  'peachpuff','violet', 'lime',  'greenyellow', 'tan',    'skyblue',
+                    'magenta',   'black', 'brown',   'green', 'cyan', 'red','blue'] *100 )
+
+colors = colors[::-1]
+colors_ = itertools.cycle(   colors  )
+#colors_ = itertools.cycle(sorted_colors_ )
+markers_ = itertools.cycle( markers )
+
+
 def plot1D( y,x=None, yerr=None, ax=None,return_fig=False, ls='-', 
            legend_size=None, lw=None, *argv,**kwargs):    
     """a simple function to plot two-column data by using matplotlib.plot
