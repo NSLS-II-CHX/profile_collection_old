@@ -1,6 +1,4 @@
 gs.DETS = [xray_eye3]
-
-
 import logging
 
 # metadata set at startup
@@ -25,5 +23,5 @@ gs.RE.subscribe('start', print_scanid)
 
 from ophyd.commands import wh_pos, log_pos, mov, movr
 
-from eiger_io.fs_handler import LazyEigerHandler
-db.fs.register_handler("AD_EIGER", LazyEigerHandler)
+#from eiger_io.fs_handler import LazyEigerHandler
+#db.fs.register_handler("AD_EIGER", LazyEigerHandler)
