@@ -19,7 +19,8 @@ def plot1D( y,x=None, yerr=None, ax=None,return_fig=False, ls='-',
     Returns
     -------
     None
-    """     
+    """
+    RUN_GUI = False
     if ax is None:
         if RUN_GUI:
             fig = Figure()
