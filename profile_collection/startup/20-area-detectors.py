@@ -170,12 +170,13 @@ xray_eye3_writing = StandardProsilicaWithTIFF('XF:11IDB-BI{Cam:08}', name='xray_
 fs1 = StandardProsilica('XF:11IDA-BI{FS:1-Cam:1}', name='fs1')
 fs2 = StandardProsilica('XF:11IDA-BI{FS:2-Cam:1}', name='fs2')
 fs_wbs = StandardProsilica('XF:11IDA-BI{BS:WB-Cam:1}', name='fs_wbs')
-dcm_cam = StandardProsilica('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam')
+#dcm_cam = StandardProsilica('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam')
 fs_pbs = StandardProsilica('XF:11IDA-BI{BS:PB-Cam:1}', name='fs_pbs')
 #elm = Elm('XF:11IDA-BI{AH401B}AH401B:',)
 
 all_standard_pros = [xray_eye1, xray_eye2, xray_eye3, xray_eye1_writing, xray_eye2_writing,
-                     xray_eye3_writing, fs1, fs2, fs_wbs, dcm_cam, fs_pbs]
+                     xray_eye3_writing, fs1, fs2, fs_wbs, fs_pbs]
+#                     xray_eye3_writing, fs1, fs2, dcm_cam, fs_wbs, fs_pbs]
 for camera in all_standard_pros:
     camera.read_attrs = ['stats1', 'stats2','stats3','stats4','stats5']
     # camera.tiff.read_attrs = []  # leaving just the 'image'
@@ -205,6 +206,10 @@ def set_eiger_defaults(eiger):
     eiger.cam.read_attrs = []
     eiger.cam.configuration_attrs = ['acquire_time', 'acquire_period', 'num_images']
 
+
+# Eiger 500k using internal trigger
+eiger500K_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig500K}', name='eiger500K_single')
+set_eiger_defaults(eiger500K_single)
 
 # Eiger 1M using internal trigger
 eiger1m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig1M}', name='eiger1m_single')

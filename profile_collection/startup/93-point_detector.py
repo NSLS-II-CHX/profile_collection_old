@@ -43,6 +43,10 @@ def get_pdet_count( integer_time, acquisition_period  ):
         return data/Nt
 
 
+#def get_current_count( ):
+#        '''get the count for the current setup'''
+        
+
 
 def get_count_hv( hv, low_v, high_v, atts=None ):
         '''get count for different attenuation at one applied high voltage
@@ -83,7 +87,7 @@ def get_count_acqt( hv, low_v, high_v, acq_time):
         return data
         
 
-def get_count_hv_series( hvs ):
+def get_count_hv_series( hvs, vol_peak, atts=None ):
         '''
         get count for different attenuation at different applied high voltage
         Example:
@@ -95,10 +99,11 @@ def get_count_hv_series( hvs ):
                 print( '*'*40)
                 print( 'The current applied voltage is: %s'%hv )
                 print( '*'*40)
-                low_v = max( vol_LB[i] - v_window, 0 )
-                high_v = min(vol_LB[i] + v_window, 5 )
-                data[hv] = get_count_hv( hv, -low_v, -high_v )
+                low_v = max( vol_peak[i] - v_window, 0 )
+                high_v = min(vol_peak[i] + v_window, 5 )
+                data[hv] = get_count_hv( hv, -low_v, -high_v, atts=atts )
         return data
+
 
 
 att_n = np.array(       [1,     .9,     0.7,   0.5,    0.4,    0.3,       0.2,    0.1,  0.05, 0.025, 0.01, 0.005,  0.001    ]                                           )
@@ -111,6 +116,19 @@ vol_LB = np.array(  [0.04, 0.26, 0.58, 1.12, 1.17, 1.2, 1.21, 1.22, 1.24, 1.25 ]
 v_window = .2
 
 
+#for NaI detector, same box with LaBr3, 
+#dead time 250 ns
+#HV_NI = -np.linspace( 1000,  2000, 11)
+HV_NI = -np.linspace( 1100,  2000, 10)
+#         array([   1100.,  1200.,  1300.,  1400., 1500.,  1600.,  1700.,  1800.,  1900.,  2000.])
+vol_NI = np.array(  [ 0.28,    0.28,  0.27,    0.27,   0.28,   0.28,   0.28 ]  )
+
+v_window = .27
+background = 0.6 #for HV = -1600, without beam but with light
+#background = np.array( [ 0, 0, 0, 0, 0.1,  0.2, 0.3, 1.8, 2.5, 5.8, 9.8  ] )
+background = np.array( [ 0, 0, 0, 0.1,  0.2, 0.3, 1.8, 2.5, 5.8, 9.8  ] )
+
+
 hv = -2000 
 hvs = HV_LB
 
@@ -119,37 +137,66 @@ acq_time = np.array( [ 0.0001, 0.001, 0.01, 0.1, 1 ] )
 
 data_dir ='/XF11ID/analysis/2017_1/commissioning/Results/Point_Detector/'
 #np.savetxt( data_dir + 'count_2000V.txt', np.vstack( [att_real, data] ) )
+#pickle.dump(data, open(data_dir + 'LaBr_1100_2000.pkl', 'wb') )
+#pickle.dump(data, open(data_dir + 'NaI-I_1100_2000.pkl', 'wb') )
+
 
 #For LaBr, other metadata: Triger Mode: INTermal; Intergration time: 0.1 second;Dwell time 1ms; Deadtime: 20 ns
 #plot1D( x = att_real, y = data, c='r', m = 'o', ls='--', legend='LaBr@2000', title='LaBr detector@2000V', xlabel='attenuation', ylabel='count' )        
 #plot1D( x = acq_time, y = d, c='r', m = 'o', ls='--', logx=True, logy=True, legend='LaBr@1100', title='LaBr detector~acqtime@1100V',xlabel='acquisition time', ylabel='count', save=True, path= data_dir )        
 
+#plot1D( x = att_real, y = data, c='r', m = 'o', ls='--', legend='%s@1600'%det, title='%s detector@1600V'%det, xlabel='attenuation', ylabel='count' )        
 
+
+
+det='LaBr'
+det = 'NaI_1'
 
 def save_data( data ):
-        keys = list( data.keys() )
+        keys = sorted(list( data.keys() ))
         for k in keys:
                 dk = data[k]
-                np.savetxt( data_dir + 'count_LaBr_%sV.txt'%(-int(k)), np.vstack( [att_real, dk] ) )
+                np.savetxt( data_dir + 'count_'+det+'_%sV.txt'%(-int(k)), np.vstack( [att_real, dk] ) )
         
 
-def plot_data( data, all_in_one = False ):
-        keys = list( data.keys() )
+def plot_data( data,  background= None, all_in_one = False ):
+        keys = sorted( list( data.keys() ) )
         if all_in_one:
                 fig, ax = plt.subplots()
-        for k in keys:
+        for i, k in enumerate(keys):
                 dk = data[k]
+                if background is not None:
+                        print( i, background[i]  )
+                        dk = data[k].copy() -  background[i]                        
                 if not all_in_one:
                         plot1D( x = att_real, y = dk,c='r', m = 'o', ls='--',  logx=True, logy=True,
-                        legend='LaBr@%s V'%(int(k)), title='LaBr detector@%s V'%(int(k)), xlabel='attenuation', ylabel='count' )
+                        legend=det+'@%s V'%(int(k)), title=det+' detector@%s V'%(int(k)), xlabel='attenuation', ylabel='count' )
                         
-                        plt.savefig(  data_dir + 'count_LaBr_%sV.png'%(-int(k)) )
+                        plt.savefig(  data_dir + 'count_'+det+'_%sV.png'%(-int(k)) )
                 else:
                         plot1D( x = att_real, y = dk, ls='--',  logx=True, logy=True, ax=ax, 
-                        legend='LaBr@%s V'%(int(k)), title='LaBr detector', xlabel='attenuation', ylabel='count' )
-                        plt.savefig(  data_dir + 'count_LaBr.png' )
+                        legend=det+'@%s V'%(int(k)), title=det+' detector', xlabel='attenuation', ylabel='count' )
+                        plt.savefig(  data_dir + 'count_'+ det +'.png' )
                         
                 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

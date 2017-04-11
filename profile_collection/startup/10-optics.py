@@ -176,6 +176,24 @@ foil_y = EpicsMotor('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr', name='foil_y')
 # foil_x for DBPM (note foil_y is for a different device, perhaps we should rename ...)
 foil_x = EpicsMotor('XF:11IDB-OP{Mon:Foil-Ax:X}Mtr', name='foil_x')
 
+#Sample chamber smaract linear stages
+# Note crazy names only for Julien!!!
+#amp = XYMotor('XF:11IDB-OP{BS:Sam', name='amp')
+
+
+
+class amp_motor(Device):
+    #x = EpicsMotor('XF:11IDB-OP{BS:Sam-Ax:X}Mtr')
+    ampx = EpicsSignal('XF:11IDB-OP{BS:Samp-Ax:X}Mtr.VAL', name='ampx')
+    ampy = EpicsSignal('XF:11IDB-OP{Stg:Samp-Ax:Phi}Mtr.VAL', name='ampy')
+    ampz = EpicsSignal('XF:11IDB-OP{BS:Samp-Ax:Y}Mtr.VAL', name='ampz')
+    #caput('XF:11IDB-ES{Det:Eig4M}cam1:NumImages',  fnum )
+
+# SAXS table: WAXS section rotation
+SAXS_x1 = EpicsMotor('XF:11IDB-ES{Tbl:SAXS-Ax:X1}Mtr',name='SAXS_x1')
+SAXS_x2 = EpicsMotor('XF:11IDB-ES{Tbl:SAXS-Ax:X2}Mtr',name='SAXS_x2')
+
+
 # Note inconsistency in capitalization of Bpm/BPM below.
 bpm1 = XYMotor('XF:11IDA-BI{Bpm:1', name='bpm1')
 bpm2 = XYMotor('XF:11IDB-BI{BPM:2', name='bpm2')

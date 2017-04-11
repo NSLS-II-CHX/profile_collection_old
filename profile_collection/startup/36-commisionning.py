@@ -18,6 +18,25 @@
 
 #RE = gs.RE  # convenience alias
 
+def shutter_test():
+	for i in range(1,56):
+		if caget('XF:11IDB-VA{Att:1-CCG:1}P-I')<=1.1E-7:
+			print('taking data series with fast shutter...')
+			series(shutter_mode='multi',expt=.00134,acqp=.02,imnum=2000,comment='shutter test')
+		else:
+			print(time.ctime+':  vacuum > 1.1E-7  -> waiting for 15 min...')
+			sleep(900)
+			if caget('XF:11IDB-VA{Att:1-CCG:1}P-I')<=1.1E-7:
+				print('taking data series with fast shutter...')
+				series(shutter_mode='multi',expt=.00134,acqp=.02,imnum=2000,comment='shutter test')
+			else: raise vac_Exception('something is wrong: vacuum does not recover...')
+		print(str(time.ctime)+':  waiting for 15 min...')		
+		sleep(900)
+		
+
+class vac_Exception(Exception):
+	pass
+
 def capillary_bottom_in():
     ''' This function is wrote for Sandro's three samples, Nov 2, 2016'''
     mov(diff.xh,0.45)

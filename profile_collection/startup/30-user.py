@@ -4,6 +4,26 @@ from epics import caput
 from filestore import RawHandler
 from math import radians
 
+
+def beam_on():
+	foil_x.move(-20.2)
+
+def beam_off():
+	foil_x.move(-19.6)
+
+def eiger4m_feedback():
+	caput('XF:11IDB-ES{Det:Eig4M}cam1:ManualTrigger',1)	#set manual trigger mode
+	beam_off()
+	eiger4m_single.cam.acquire.put(1) 	# opens fast shutter and arms detector
+	sleep(1)
+	caput('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP',1)	# feedback on
+	caput('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP',1)
+	sleep(2)
+	beam_on()
+	caput('XF:11IDB-ES{Det:Eig4M}cam1:Trigger',1)   # this needs to be done from BS, not from cha! Could even revert with previous command -> dark images at the beginning, but no beam damage overhead
+	caput('XF:11IDB-ES{Det:Eig4M}cam1:ManualTrigger',0)	#remove manual trigger mode
+
+
 def movr_samy(d ):
     '''A temporary solution for move sample in y direction by a combination of xv and zh 
     d: the relative move distance
@@ -61,9 +81,29 @@ for motors in [ diff, bpm2, mbs, dcm, tran, s1, s2, s4]:
     #mov(diff.zv,0.20016)     - these were for the liquid GI-SAXS setup, Wiegart 2016-1
     #mov(diff.yv, 6.48889)
     #mov(diff.xv2,-21.8501)
-    
 
+def goto_500k():
+	caput('XF:11IDB-ES{Det:SAXS-Ax:X}Mtr.VAL',304.6242)
+	caput('XF:11IDB-ES{Det:SAXS-Ax:Y}Mtr.VAL',151.7567)   
 
+def goto_4m():
+	caput('XF:11IDB-ES{Det:SAXS-Ax:X}Mtr.VAL',477.9539)
+	caput('XF:11IDB-ES{Det:SAXS-Ax:Y}Mtr.VAL',83.7567)
+
+def ct_500k(expt=.0001,frame_rate=9000,imnum=1,comment='eiger500K image'):
+	caput('XF:11IDB-ES{Det:Eig500K}cam1:FWClear',1)   #remove files from detector
+	caput('XF:11IDB-ES{Det:Eig500K}cam1:ArrayCounter',0)
+	eiger500K_single.photon_energy.put(9652.0)
+	#add some metadata:
+	RE.md['transmission']=att.get_T()
+	#RE.md['T_yoke']=str(caget('XF:11IDB-ES{Env:01-Chan:C}T:C-I'))
+	eiger500K_single.cam.num_images.put(imnum)
+	eiger500K_single.cam.acquire_time.put(expt)
+	eiger500K_single.cam.acquire_period.put(max([0.000112,1./frame_rate]))
+	RE(count([eiger500K_single]),Measurement=comment)
+	#remove meta data keys
+	a=RE.md.pop('transmission')
+	#a=RE.md.pop('T_yoke')
 
 def feedback_ON():
     mov(foil_x, 8)
@@ -92,34 +132,42 @@ def feedback_OFF():
 def alignment_mode():
 	"""
 	put beamline into alignment mode: att.set_T(1E-4)
-	movr(saxs_bst.y1,-5)
+	mov(saxs_bst.y1,-190.6)
 	mov(foil_x,-26.) 
 	"""
 	print('putting beamline into alignment mode: transmission: 1E-4, beamstop: out, diagnostics:out')
 	fast_sh.close()
 	att.set_T(1E-4)
-	movr(saxs_bst.y1,-5.)
+	mov(saxs_bst.y1,-190.6)
 	mov(foil_x,-26.)
 	detselect(eiger4m_single)
+	caput('XF:11IDB-ES{Det:Eig4M}cam1:SaveFiles',0)
+	print('Not saving the Eiger files ...')
 	eiger4m_single.cam.acquire_time.value=.1
 	eiger4m_single.cam.acquire_period.value=.1
 	eiger4m_single.cam.num_images.value=1
+	#movr(saxs_bst.y1,5.)
 	
 
 def measurement_mode():
 	"""
 	put beamline into measurement mode: att.set_T(1)
-	mov(saxs_bst.y1,-189.1)   !!! absolute !!!
+	mov(saxs_bst.y1,-195.6.1)   !!! absolute !!!
 	"""
 	print('putting beamline into measurement mode: transmission: 1, beamstop: in')
 	print('removing files from detector')
 	caput('XF:11IDB-ES{Det:Eig4M}cam1:FWClear',1)
-	mov(saxs_bst.y1,-189.1)
+	caput('XF:11IDB-ES{Det:Eig4M}cam1:SaveFiles',1)
+	print('Should be also saving files now ...')
+	mov(saxs_bst.y1,-195.6)
 	att.set_T(1)
 	caput('XF:11IDB-ES{Dif-Ax:PhH}Cmd:Kill-Cmd',1)
 
 def diode_OUT():
 	mov(foil_x,-26.)
+
+def diode_IN():
+	mov(foil_x,8.)
 
 def snap(expt=0.1,comment='Single image'):
     """
@@ -133,7 +181,65 @@ def snap(expt=0.1,comment='Single image'):
     caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquirePeriod',expt)
     RE(count([eiger4m_single]),Measurement=comment)
 
+###### sample-detector distance macros for SAXS ##########
 
+def tube_length(tube_nr):
+	'''
+	function to get tube length of SAXS instrument, from label on tube
+	calling sequence: tube_length(tube_nr) -> returns tube length in mm
+	tube_nr: see label on instrument. This is only the length of the tube, NOT the sample-detector distance!
+	'''
+	tube_l=np.array([1758.24,2764.78,3766.66,4616.18,6789.28,9790.93,12792.57,15742.99])-228.22
+	if tube_nr >= 0 and tube_nr <=7:
+		return tube_l[tube_nr]
+	else: raise param_Exception('error: argument tube_nr must be between 0 and 7')
+	
+
+def get_saxs_sd(tube_nr,detector='eiger4m'):
+	'''
+	function returns sample detector distance for SAXS instrument
+	based on tube nr, detector and Z1 position
+	calling sequence: get_saxs_sd(tube_nr,detector='eiger4m') -> returns sample-detector distance [mm]
+	'''
+	tube=tube_length(tube_nr)
+	if detector == 'eiger4m':
+		det_chamber=247.136
+	else: raise param_Exception('error: detector '+detector+'currently not defined...')
+	sd=273.62+caget('XF:11IDB-ES{Tbl:SAXS-Ax:Z1}Mtr.RBV')+tube+det_chamber
+	print('sample-detector distance using tube_nr: '+str(tube_nr)+' detector: '+detector+' at Z1 position '+str(caget('XF:11IDB-ES{Tbl:SAXS-Ax:Z1}Mtr.RBV'))+': '+str(sd)+'mm')
+	return sd
+
+def calc_saxs_sd(tube_nr,z1,detector='eiger4m'):
+	'''
+	function calculates sample detector distance for SAXS instrument
+	based on tube nr, detector and Z1 position
+	calling sequence: calc_saxs_sd(tube_nr,z1,detector='eiger4m') -> returns sample detector distance [mm]
+	'''
+	tube=tube_length(tube_nr)
+	if detector == 'eiger4m':
+		det_chamber=247.136
+	else: raise param_Exception('error: detector '+detector+'currently not defined...')
+	sd=273.62+z1+tube+det_chamber
+	print('sample-detector distance using tube_nr: '+str(tube_nr)+' detector: '+detector+' at Z1 position '+str(z1)+': '+str(sd)+'mm')
+	return sd
+
+def update_saxs_sd(tube_nr,detector='eiger4m'):
+	'''
+	get sample detector distance for SAXS instrument
+	based on tube nr, detector and Z1 position and update metadata
+	calling sequence: update_saxs_sd(tube_nr,detector='eiger4m')
+	'''
+	sd=get_saxs_sd(tube_nr,detector='eiger4m')
+	if detector == 'eiger4m':
+		print('updating metadata in Eiger4M HDF5 file...')
+		caput('XF:11IDB-ES{Det:Eig4M}cam1:DetDist',sd/1000.)
+	else: raise param_Exception('error: detector '+detector+'currently not defined...')
+	
+
+class param_Exception(Exception):
+	pass 
+
+########## END sample-detector distance macros for SAXS ####################
 
 # Lutz's test Nov 08 start
 def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment=''):
@@ -146,26 +252,32 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
 	comment: free comment (string) shown in Olog and attached as RE.md['Measurement']=comment
 	update 01/23/2017:  for imnum <100, set chunk size to 10 images to force download. Might still cause problems under certain conditions!!
 	"""
+	print('start of series: '+time.ctime())
 	if acqp=='auto':
 		acqp=expt
 	if det == 'eiger1m':    #get Dectris sequence ID
 		seqid=caget('XF:11IDB-ES{Det:Eig1M}cam1:SequenceId')+1
 		idpath=caget('XF:11IDB-ES{Det:Eig1M}cam1:FilePath',' {"longString":true}')
-		aput('XF:11IDB-ES{Det:Eig1M}cam1:FWClear',1)	#remove files from the detector
+		caput('XF:11IDB-ES{Det:Eig1M}cam1:FWClear',1)	#remove files from the detector
 		caput('XF:11IDB-ES{Det:Eig1M}cam1:ArrayCounter',0) # set image counter to '0'
-		if imnum < 100:															# set chunk size
+		if imnum < 500:															# set chunk size
 			caput('XF:11IDB-ES{Det:Eig1M}cam1:FWNImagesPerFile',10)
 		else: 
 			caput('XF:11IDB-ES{Det:Eig1M}cam1:FWNImagesPerFile',100)
 	elif det == 'eiger4m':
+		if expt <.00134:
+			expt=.00134
+		else:
+			pass
 		seqid=caget('XF:11IDB-ES{Det:Eig4M}cam1:SequenceId')+1
 		idpath=caget('XF:11IDB-ES{Det:Eig4M}cam1:FilePath',' {"longString":true}')
 		caput('XF:11IDB-ES{Det:Eig4M}cam1:FWClear',1)	#remove files from the detector
 		caput('XF:11IDB-ES{Det:Eig4M}cam1:ArrayCounter',0) # set image counter to '0'
-		if imnum < 100:															# set chunk size
+		if imnum < 500:															# set chunk size
 			caput('XF:11IDB-ES{Det:Eig4M}cam1:FWNImagesPerFile',10)
 		else: 
 			caput('XF:11IDB-ES{Det:Eig4M}cam1:FWNImagesPerFile',100)
+	#print('setting detector paramters: '+time.ctime())
 	if shutter_mode=='single':
 		if det == 'eiger1m':
 			detector=eiger1m_single
@@ -174,17 +286,34 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
 		detector.cam.acquire_time.value=expt   	# setting up exposure for eiger1m/4m_single
 		detector.cam.acquire_period.value=acqp
 		detector.cam.num_images.value=imnum
+		#print('adding metadata: '+time.ctime())
 		RE.md['exposure time']=str(detector.cam.acquire_time.value)		# add metadata information about this run
 		RE.md['acquire period']=str(detector.cam.acquire_period.value)
 		RE.md['shutter mode']=shutter_mode
 		RE.md['number of images']=str(detector.cam.num_images.value)
 		RE.md['data path']=idpath
 		RE.md['sequence id']=str(seqid)
+		RE.md['transmission']=att.get_T()
 	if shutter_mode=='multi':
+#		if 1./acqp*1E3>51000:           # check for fast shutter / vacuum issues....
+#			raise series_Exception('error: due to vacuum issues, 1/acqp*1000 !<51000 ')
+#		if caget('XF:11IDB-VA{Att:1-CCG:1}P-I') > 8.E-8:
+#			print('vacuum in fast shutter section is bad: '+str(caget('XF:11IDB-VA{Att:1-CCG:1}P-I'))+' Torr (need: 8.E-8 Torr)...'+time.ctime()+': going to wait for 15 min!')
+#			sleep(900)
+#			if caget('XF:11IDB-VA{Att:1-CCG:1}P-I') > 8.E-8:
+#				print('vacuum in fast shutter section is bad: '+str(caget('XF:11IDB-VA{Att:1-CCG:1}P-I'))+' Torr -> still bad, going to abort!')
+#				raise series_Exception('error: vacuum issue in the fast shutter section...aborting run.')
+#			else: print('vacuum level: '+str(caget('XF:11IDB-VA{Att:1-CCG:1}P-I'))+' Torr -> pass!')
+		if acqp <.1 and imnum > 5000:
+				print('warning: max number frames with shutter >10Hz is 5000....re-setting "imnum" to 5000.')
+				imnum=5000
+		if expt*acqp < 5.99E-5:
+				raise series_Exception('error: shutter duty cycle is too high...make sure expt x acqp <6E-5.')
 		if det == 'eiger1m':
 			detector=eiger1m
-			if expt+caget('XF:11IDB-ES{Det:Eig1M}ExposureDelay-SP') >= acqp or acqp<.01:   # check whether requested parameters are sensible
-				raise series_Exception('error: exposure time +shutter time > acquire period or shutter requested to go >100Hz')
+			if expt+caget('XF:11IDB-ES{Det:Eig1M}ExposureDelay-SP') >= acqp or acqp<.019:   # check whether requested parameters are sensible
+				raise series_Exception('error: exposure time +shutter time > acquire period or shutter requested to go >50Hz')
+			
 			caput('XF:11IDB-ES{Det:Eig1M}Mode-Cmd',1)    #enable auto-shutter-mode
 			caput('XF:11IDB-ES{Det:Eig1M}NumImages-SP',imnum)
 			caput('XF:11IDB-ES{Det:Eig1M}ExposureTime-SP',expt)
@@ -192,8 +321,8 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
 			detector.cam.acquire_period.value=acqp   # ignored in data acquisition, but gets correct metadata in HDF5 file
 		if det == 'eiger4m':
 			detector=eiger4m
-			if expt+caget('XF:11IDB-ES{Det:Eig4M}ExposureDelay-SP') >= acqp or acqp<.01:
-				raise series_Exception('error: exposure time +shutter time > acquire period or shutter requested to go >100Hz')
+			if expt+caget('XF:11IDB-ES{Det:Eig4M}ExposureDelay-SP') >= acqp or acqp<.019:
+				raise series_Exception('error: exposure time +shutter time > acquire period or shutter requested to go >50Hz')
 			caput('XF:11IDB-ES{Det:Eig4M}Mode-Cmd',1)    #enable auto-shutter-mode
 			caput('XF:11IDB-ES{Det:Eig4M}NumImages-SP',imnum)
 			caput('XF:11IDB-ES{Det:Eig4M}ExposureTime-SP',expt)
@@ -205,9 +334,11 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
 		RE.md['number of images']=imnum
 		RE.md['data path']=idpath
 		RE.md['sequence id']=str(seqid)
+		RE.md['transmission']=att.get_T()
+	#print('adding experiment specific metadata: '+time.ctime())
 	## add experiment specific metadata:
 	RE.md['T_yoke']=str(caget('XF:11IDB-ES{Env:01-Chan:C}T:C-I'))
-	RE.md['T_sample']=str(caget('XF:11IDB-ES{Env:01-Chan:D}T:C-I'))
+	#RE.md['T_sample']=str(caget('XF:11IDB-ES{Env:01-Chan:D}T:C-I'))
 	if caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP') == 1:
 		RE.md['feedback_x']='on'
 	elif caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP') == 0:
@@ -219,7 +350,9 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
 	## end experiment specific metadata
 	print('taking data series: exposure time: '+str(expt)+'s,  period: '+str(acqp)+'s '+str(imnum)+'frames  shutter mode: '+shutter_mode)
 	print('Dectris sequence id: '+str(int(seqid)))
+	#print('executing count: '+time.ctime())
 	RE(count([detector]),Measurement=comment)
+	#print('remove metadata: '+time.ctime())	
 	a=RE.md.pop('exposure time')		# remove eiger series specific meta data (need better way to remove keys 'silently'....)
 	a=RE.md.pop('acquire period')
 	a=RE.md.pop('shutter mode')
@@ -228,9 +361,10 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
 	a=RE.md.pop('sequence id')
 	## remove experiment specific dictionary key
 	a=RE.md.pop('T_yoke')
-	a=RE.md.pop('T_sample')
+	#a=RE.md.pop('T_sample')
 	a=RE.md.pop('feedback_x')
 	a=RE.md.pop('feedback_y')
+	a=RE.md.pop('transmission')
 
 class series_Exception(Exception):
 	pass
@@ -264,7 +398,7 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
 			sleep(5)  # need time to update setpoint....
 			if log_entry == 'on':
 				try:
-					olog_client.log( 'Changed temperature to T='+ str(caget('XF:11IDB-ES{Env:01-Out:1}T-SP')-273.15)[:5]+'C, ramp: off')
+					olog_client.log( 'Changed temperature to T='+ str(Tsetpoint)[:5]+'C, ramp: off')
 				except:
 					pass
 			else: pass
@@ -272,7 +406,7 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
 			print('cooling Channel C to '+str(Tsetpoint)+'deg @ '+str(cool_ramp)+'deg./min')	
 			if log_entry == 'on':
 				try:
-					olog_client.log( 'Changed temperature to T='+ str(caget('XF:11IDB-ES{Env:01-Out:1}T-SP')-273.15)[:5]+'C, ramp: '+str(cool_ramp)+'deg./min')
+					olog_client.log( 'Changed temperature to T='+ str(Tsetpoint)[:5]+'C, ramp: '+str(cool_ramp)+'deg./min')
 				except:
 					pass
 			else: pass
@@ -290,7 +424,7 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
 		sleep(5)	
 		if log_entry == 'on':
 			try:
-				olog_client.log( 'Changed temperature to T='+ str(caget('XF:11IDB-ES{Env:01-Out:1}T-SP')-273.15)[:5]+'C, ramp: '+str(heat_ramp)+'deg./min')
+				olog_client.log( 'Changed temperature to T='+ str(Tsetpoint)[:5]+'C, ramp: '+str(heat_ramp)+'deg./min')
 			except:
 				pass
 		else: pass
@@ -418,13 +552,14 @@ def check_ring():
 		print('checking for SR ring status...seems there is a problem')		
 	return ring_ok
 
-def wait_for_ring():
+def wait_for_ring(wait_after=0):
 	ring_ok=check_ring()
 	if ring_ok==0:
 		while ring_ok==0:
 			print('no beam in SR ring...checking again in 5 minutes.')
 			sleep(300)
 			ring_ok=check_ring()
+		sleep(wait_after)
 	if ring_ok==1: pass
 
 def check_bl():
@@ -577,6 +712,61 @@ def dscan_bpm_vlt( start, stop, num,  ):
     caput( pv, cur_vlt )
     fig, ax = plt.subplots()
     ax.plot(   vlt, np.array( inten),  '-go')
+
+def dscan_smaract( start, stop, num,ax,statnum=1, globalcoord=True):
+    ''' statnum is the statistic to plot
+        if globalcoord is true, plot w.r.t. the global (sample + amp) coordinates
+    '''
+    if ax == 'x':
+        axislab= 'x'
+        pv = 'XF:11IDB-OP{BS:Samp-Ax:X}Mtr.VAL'
+    if ax == 'y':
+        axislab= 'y'
+        pv = 'XF:11IDB-OP{BS:Samp-Ax:Y}Mtr.VAL'
+    if ax == 'z':
+        axislab= 'z'
+        pv = 'XF:11IDB-OP{Stg:Samp-Ax:Phi}Mtr.VAL'
+    if globalcoord:
+        axislab = axislab + " (GLOBAL)"
+    cur_vlt = caget( pv )
+    vlt = np.linspace( start, stop, num ) +  cur_vlt
+    if globalcoord:
+        if ax == 'x':
+            cur_sample= diff.xh.user_readback.value
+        elif ax == 'y':
+            cur_sample= diff.yh.user_readback.value
+        else:
+            # for z do nothing
+            cur_sample = 0
+        vlt += cur_sample
+    inten = []
+    fig, ax = plt.subplots()
+    ax.set_xlabel(axislab)
+    for n,i in enumerate(vlt):
+        caput(  pv, i )
+        #print(str(i))
+        sleep( 2 )
+        statstr = '_stats{}_total'.format(statnum)
+        detselect(eiger4m_single,suffix=statstr)
+        RE(ct())
+        if statnum == 1:
+            inten.append(  eiger4m_single.stats1.total.value  )
+        elif statnum == 2:
+            inten.append(  eiger4m_single.stats2.total.value  )
+        elif statnum == 3:
+            inten.append(  eiger4m_single.stats3.total.value  )
+        elif statnum == 4:
+            inten.append(  eiger4m_single.stats4.total.value  )
+
+        ax.cla()
+        ax.set_xlabel(axislab)
+        ax.plot(   vlt[:n+1], np.array( inten),  '-go')
+        #ax.plot( i, xray_eye1.stats1.total.value, '-go')
+    caput( pv, cur_vlt )
+    #fig, ax = plt.subplots()
+    ax.plot(   vlt, np.array( inten),  '-go')
+    return vlt, inten
+
 
 def dscan_hdm_p( start, stop, num,  ):
     pv = 'XF:11IDA-OP{Mir:HDM-Ax:P}PID-SP'
@@ -1025,5 +1215,84 @@ def measurecustomscratch():
             mov(diff.yh,y0-j*dy)
             mov(diff.xh, x0+i*dx)
             sam.measure(600,comment="box ({},{})".format(6-j,i+7))
-          
+
+
+### python based kinematics for rotation of SAXS table's WAXS section #### 03/08/2017
+# WAXS section rotation
+def WAXS_rot_setup():          
+	WAXS_angle=np.arange(0,17.2,.2)
+	x1_pos= 1399*2*np.pi/360.*WAXS_angle
+	x2_pos=5144.23*np.sin((WAXS_angle-4.008)/180*np.pi)+359.56
+	x2_velocity=np.array([3.669,3.669,3.669,3.67,3.671,3.672,3.672,3.673,3.674,3.674,3.675,3.675,3.675,3.676,3.676,3.676,3.677,3.677,3.677,3.677,3.677,3.677,3.677,3.677,3.677,3.677,3.676,3.676,3.676,3.675,3.675,3.675,3.674,3.674,3.673,3.672,3.672,3.671,3.67,3.669,3.669,3.668,3.667,3.666,3.665,3.664,3.663,3.661,3.66,3.659,3.658,3.656,3.655,3.653,3.652,3.651,3.649,3.647,3.646,3.644,3.642,3.64,3.639,3.637,3.635,3.633,3.631,3.629,3.627,3.625,3.622,3.62,3.618,3.616,3.613,3.611,3.608,3.606,3.603,3.601,3.598,3.595,3.593,3.59,3.587,3.584])
+	return [WAXS_angle,x1_pos,x2_pos,x2_velocity]
+
+def WAXS_rot_pos():
+	'''
+	calculates current rotation angle for SAXS table's WAXS section from X1 and X2 positions via a look-up table
+	'''
+	[WAXS_angle,x1_pos,x2_pos,x2_velocity]=WAXS_rot_setup()
+	WAXS_angle=np.array(WAXS_angle)
+	x1_pos=np.array(x1_pos)
+	x2_pos=np.array(x2_pos)
+	x2_velocity=np.array(x2_velocity)
+	### WAXS angle according to X1:	
+	if SAXS_x1.position >415.09 or SAXS_x1.position <=-.2:
+		raise rotation_exception('error: position of X1 is out of range')	
+	elif SAXS_x1.position <0:
+		WAXS_angle_x1=0
+	elif SAXS_x1.position <415.09 and SAXS_x1.position >=0:
+		WAXS_angle_x1 = np.interp(SAXS_x1.position,x1_pos,WAXS_angle)
+	### WAXS angle according to X2:	
+	if SAXS_x2.position >1516.06 or SAXS_x1.position <=-.2:
+		raise rotation_exception('error: position of X2 is out of range')	
+	elif SAXS_x2.position <0:
+		WAXS_angle_x2=0
+	elif SAXS_x2.position <1516.06 and SAXS_x2.position >=0:
+		WAXS_angle_x2 = np.interp(SAXS_x2.position,x2_pos,WAXS_angle)
+	curr_WAXS_angle=0.5*(WAXS_angle_x1+WAXS_angle_x2)
+	print('WAXS rotation according to X1: '+str(WAXS_angle_x1)+'  WAXS rotation according to X2: '+str(WAXS_angle_x2)+'  -> WAXS rotation: ~'+str(curr_WAXS_angle))
+	return curr_WAXS_angle
+
+def WAXS_rotation(angle):
+	'''
+	moves SAXS table's WAXS section to desired rotation angle in 2 deg steps, using lookup table for positions and X2 velocity
+	WAXS_rotation(angle) -> angle [deg.]
+	'''
+	max_angle=14.1 #hard coded limit for current setup	
+	[WAXS_angle,x1_pos,x2_pos,x2_velocity]=WAXS_rot_setup()
+	WAXS_angle=np.array(WAXS_angle)
+	x1_pos=np.array(x1_pos)
+	x2_pos=np.array(x2_pos)
+	x2_velocity=np.array(x2_velocity)
+	if angle <0 or angle>max_angle:
+		raise rotation_exception('error: requested rotation angle out of range')
+	curr_WAXS_angle=WAXS_rot_pos()
+	#curr_WAXS_angle=7.9 ### fake for test
+	if angle >= curr_WAXS_angle:
+		direction=1
+	elif angle < curr_WAXS_angle:
+		direction=-1
+	print('going to move WAXS section from '+str(curr_WAXS_angle)+' to: '+str(angle))
+	while abs(angle - curr_WAXS_angle) > 1:		# moving in 1 deg steps
+		curr_velocity= np.interp((curr_WAXS_angle+direction*.5),WAXS_angle,x2_velocity)
+		curr_X1=np.interp((curr_WAXS_angle+direction*1),WAXS_angle,x1_pos)
+		curr_X2=np.interp((curr_WAXS_angle+direction*1),WAXS_angle,x2_pos)
+		print('moving to: '+str(curr_WAXS_angle+direction*1)+' setting X2 velocity to '+str(curr_velocity)+'  X1 -> '+str(curr_X1)+'  X2 -> '+str(curr_X2))
+		# need to do the actual moves here:
+		SAXS_x2.velocity.value=curr_velocity
+		mov([SAXS_x1,SAXS_x2],[curr_X1,curr_X2])
+		curr_WAXS_angle=WAXS_rot_pos()		# the real thing...
+		#curr_WAXS_angle=curr_WAXS_angle+direction*1 #faking move for testing
+	# moving the balance:
+	if abs(angle - curr_WAXS_angle) <1.2:
+		curr_X1=np.interp(angle,WAXS_angle,x1_pos)
+		curr_X2=np.interp(angle,WAXS_angle,x2_pos)
+		print('moving to: '+str(angle)+'  X1 -> '+str(curr_X1)+'  X2 -> '+str(curr_X2))	
+		# need to do the actual move here:
+		mov([SAXS_x1,SAXS_x2],[curr_X1,curr_X2])
+	else: raise rotation_exception('error: discrepancy from where the rotation is expected to be....')
+
+
+class rotation_exception(Exception):
+	pass
 
