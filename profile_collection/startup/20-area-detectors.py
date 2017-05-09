@@ -57,7 +57,8 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
 class StandardProsilicaWithTIFF(StandardProsilica):
     tiff = Cpt(TIFFPluginWithFileStore,
                suffix='TIFF1:',
-               write_path_template='/XF11ID/data/%Y/%m/%d/')
+               write_path_template='/XF11ID/data/%Y/%m/%d/',
+               root='/XF11ID/data')
 
 
 class EigerSimulatedFilePlugin(Device, FileStoreBase):
@@ -106,7 +107,8 @@ class EigerBase(AreaDetector):
     """
     num_triggers = ADComponent(EpicsSignalWithRBV, 'cam1:NumTriggers')
     file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
-               write_path_template='/XF11ID/data/%Y/%m/%d/')
+               write_path_template='/XF11ID/data/%Y/%m/%d/',
+               root='/XF11ID/')
     beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
