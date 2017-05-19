@@ -13,7 +13,7 @@ from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
 from ophyd import Component as Cpt, Signal
 from ophyd.utils import set_and_wait
 import filestore.api as fs
-
+from pathlib import PurePath
 
 #class Elm(SingleTrigger, DetectorBase):
  #   pass
@@ -57,7 +57,8 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
 class StandardProsilicaWithTIFF(StandardProsilica):
     tiff = Cpt(TIFFPluginWithFileStore,
                suffix='TIFF1:',
-               write_path_template='/XF11ID/data/%Y/%m/%d/')
+               write_path_template='/XF11ID/data/%Y/%m/%d/',
+               root='/XF11ID/data')
 
 
 class EigerSimulatedFilePlugin(Device, FileStoreBase):
@@ -65,7 +66,8 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
     file_path = ADComponent(EpicsSignalWithRBV, 'FilePath', string=True)
     file_write_name_pattern = ADComponent(EpicsSignalWithRBV, 'FWNamePattern',
                                           string=True)
-    file_write_images_per_file = ADComponent(EpicsSignalWithRBV, 'FWNImagesPerFile')
+    file_write_images_per_file = ADComponent(EpicsSignalWithRBV,
+                                             'FWNImagesPerFile')
     current_run_start_uid = Cpt(Signal, value='', add_prefix=())
 
     def __init__(self, *args, **kwargs):
@@ -78,15 +80,20 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
         set_and_wait(self.file_path, write_path)
         set_and_wait(self.file_write_name_pattern, '{}_$id'.format(res_uid))
         super().stage()
-        fn = os.path.join(self.file_path.get(), res_uid)
+        fn = (PurePath(self.file_path.get()) / res_uid).relative_to(self.root)
+
         ipf = int(self.file_write_images_per_file.get())
         # logger.debug("Inserting resource with filename %s", fn)
-        self._resource = fs.insert_resource('AD_EIGER2', fn, {'images_per_file': ipf})
+        self._resource = fs.insert_resource('AD_EIGER2',
+                                            fn,
+                                            {'images_per_file': ipf},
+                                            root=str(self.root))
 
     def generate_datum(self, key, timestamp):
         uid = super().generate_datum(key, timestamp)
-        # The detector keeps its own counter which is uses label HDF5 sub-files.
-        # We access that counter via the sequence_id signal and stash it in the datum.
+        # The detector keeps its own counter which is uses label HDF5
+        # sub-files.  We access that counter via the sequence_id
+        # signal and stash it in the datum.
         seq_id = 1 + int(self.sequence_id.get())  # det writes to the NEXT one
         fs.insert_datum(self._resource, uid, {'seq_id': seq_id})
         return uid
@@ -100,7 +107,8 @@ class EigerBase(AreaDetector):
     """
     num_triggers = ADComponent(EpicsSignalWithRBV, 'cam1:NumTriggers')
     file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
-               write_path_template='/XF11ID/data/%Y/%m/%d/')
+               write_path_template='/XF11ID/data/%Y/%m/%d/',
+               root='/XF11ID/')
     beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
@@ -134,7 +142,7 @@ class EigerSingleTrigger(SingleTrigger, EigerBase):
 
 class FastShutterTrigger(Device):
     """This represents the fast trigger *device*.
-    
+
     See below, FastTriggerMixin, which defines the trigging logic.
     """
     auto_shutter_mode = Cpt(EpicsSignal, 'Mode-Sts', write_pv='Mode-Cmd')
@@ -158,7 +166,7 @@ class EigerFastTrigger(EigerBase):
         return self.tr.trigger()
 
 # test_trig4M = FastShutterTrigger('XF:11IDB-ES{Trigger:Eig4M}', name='test_trig4M')
-        
+
 
 ## This renaming should be reversed: no correspondance between CSS screens, PV names and ophyd....
 xray_eye1 = StandardProsilica('XF:11IDA-BI{Bpm:1-Cam:1}', name='xray_eye1')
