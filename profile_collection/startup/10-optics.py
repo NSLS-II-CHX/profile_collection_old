@@ -219,6 +219,13 @@ mbs.yc.readback.name = 'mbs_yc'
 mbs.xg.readback.name = 'mbs_xg'
 mbs.yg.readback.name = 'mbs_yg'
 
+fe = VirtualMotorCenterAndGap('FE:C11A-OP{Slt:12', name='fe') # Front End Slits (Primary Slits)
+
+fe.xc.readback.name = 'fe_xc'
+fe.yc.readback.name = 'fe_yc'
+fe.xg.readback.name = 'fe_xg'
+fe.yg.readback.name = 'fe_yg'
+
 
 
 

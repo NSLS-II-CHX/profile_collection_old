@@ -64,7 +64,7 @@ def move_E(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5):
 	print('Done! New X-ray energy is '+ str(dcm.en.user_readback.value/1000)+'keV')
 	
 
-def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5, det=elm.sum_all):
+def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=elm.sum_all): 
 	"""
 	energy scan: Scanning both Bragg axis and gap of IVU in a linked fashion
 	calling sequence: E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5 det=elm.sum_all.value)
@@ -82,7 +82,7 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5, det=elm.sum
 			print('using manually entered gap values...')
 		else: print('error: length of manually entered list of gap value does not match number of energy points')
 	elif gapmode =="auto":
-		gap=list(xf.get_gap(energy,harm))
+		gap=list(xf.get_gap(energy,harm))  
 		print('using calculated gap values from xfuncs!')
 	inner = cycler(dcm.b,th_B)+cycler(ivu_gap,gap)
 	#plan = PlanND([det],inner)
