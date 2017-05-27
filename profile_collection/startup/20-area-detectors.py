@@ -58,7 +58,8 @@ class StandardProsilicaWithTIFF(StandardProsilica):
     tiff = Cpt(TIFFPluginWithFileStore,
                suffix='TIFF1:',
                write_path_template='/XF11ID/data/%Y/%m/%d/',
-               root='/XF11ID/data')
+               root='/XF11ID/data',
+               fs=db.fs)
 
 
 class EigerSimulatedFilePlugin(Device, FileStoreBase):
@@ -108,7 +109,8 @@ class EigerBase(AreaDetector):
     num_triggers = ADComponent(EpicsSignalWithRBV, 'cam1:NumTriggers')
     file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
                write_path_template='/XF11ID/data/%Y/%m/%d/',
-               root='/XF11ID/')
+               root='/XF11ID/',
+               fs=db.fs)
     beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
@@ -216,8 +218,8 @@ def set_eiger_defaults(eiger):
 
 
 # Eiger 500k using internal trigger
-eiger500K_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig500K}', name='eiger500K_single')
-set_eiger_defaults(eiger500K_single)
+# eiger500K_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig500K}', name='eiger500K_single')
+# set_eiger_defaults(eiger500K_single)
 
 # Eiger 1M using internal trigger
 eiger1m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig1M}', name='eiger1m_single')
