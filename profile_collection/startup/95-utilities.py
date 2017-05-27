@@ -499,7 +499,8 @@ def E_calibration(file,Edge='Cu',xtal='Si111cryo',B_off=0):
     elif isinstance(file, str) and file!='ia':
         file_path=file
         descritpion=file_path
-    elif isinstance(file,dict) and 'start' in file.keys():
+    #elif isinstance(file,dict) and 'start' in file.keys():	# some genius decided that db[-1] is no longer a dictionary....
+    elif 'start' in file.keys():
        databroker_object=1
        description='scan # ',file.start['scan_id'],' uid: ', file.start['uid'][:10]
     plt.close("all")
