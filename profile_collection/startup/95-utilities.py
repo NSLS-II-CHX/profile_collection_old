@@ -823,7 +823,7 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
         print('initial guess: Bragg= ',B_guess,' deg.   ID gap = ',i,' mm')
         es = xf.get_Es(i, 5)[1]
         mirror_stripe_pos = round(caget('XF:11IDA-OP{Mir:HDM-Ax:Y}Mtr.VAL'),1)
-        SI_STRIPE = -7.5
+        SI_STRIPE = -7.5 
         RH_STRIPE = 7.5
         if es < 9.5:
             stripe = SI_STRIPE
@@ -851,15 +851,21 @@ def get_ID_calibration(gapstart,gapstop,gapstep=.2,gapoff=0):
         yo=np.mean(intdat)
         p0=[yo,A,xc,w]
         print('initial guess for fitting: ',p0)
+        pss = 0
         try:
-            coeff,var_matrix = curve_fit(gauss,B,intdat,p0=p0)
-            center.append(coeff[2])
-            E1.append(xf.get_EBragg(xtal,-coeff[2])/5.0)
+            coeff,var_matrix = curve_fit(gauss,B,intdat,p0=p0)        
+            #center.append(coeff)
+            #E1.append(xf.get_EBragg(xtal,-coeff)/5.0)
             realgap.append(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))
-#   # append data file by i, 1 & xf.get_EBragg(xtal,-coeff[2]/5.0):
+#   # append data file by i, 1 & xf.get_EBragg(xtal,-coeff/5.0):
+            print('passed the Gaussian trial fit, will use ps now to write data')
+            ps()  #this should always work
+            Bvalue = ps.cen
+            E1.append(xf.get_EBragg(xtal,-Bvalue)/5.0)
+            center.append(Bvalue) 
             with open(fpath+fn, "a") as myfile:
-                myfile.write(str(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))+'    1.0 '+str(float(xf.get_EBragg(xtal,-coeff[2])/5.0))+'\n')
-            print('added data point: ',caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'),' ',1.0,'     ',str(float(xf.get_EBragg(xtal,-coeff[2])/5.0)))
+                myfile.write(str(caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'))+'    1.0 '+str(float(xf.get_EBragg(xtal,-Bvalue)/5.0))+'\n')
+            print('added data point: ',caget('SR:C11-ID:G1{IVU20:1-LEnc}Gap'),' ',1.0,'     ',str(float(xf.get_EBragg(xtal,-Bvalue)/5.0)))
         except: print('could not evaluate data point for ID gap = ',i,' mm...data point skipped!')
         while caget('XF:11IDA-OP{Mono:DCM-Ax:Bragg}T-I') > 80:
             time.sleep(30)
