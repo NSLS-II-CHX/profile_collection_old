@@ -8,4 +8,10 @@ subs = [LiveTable(['diff_xh', 'eiger1m_single_stats1_total', 'eiger1m_single_sta
 print ( 'The fast shutter will open/close three times, motor is diff.xh, camera is eiger1m_single')
 RE(DeltaScanPlan([eiger1m_single], diff.xh, -.1, .1, 3), subs)
 
+img = get_images(db[-1], 'eiger1m_single_image')
+print('show the first image')
+plt.imshow( img[0][0] )
+
+
+
 #can we change only one mater file for the same dscan?
