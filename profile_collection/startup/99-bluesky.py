@@ -164,7 +164,8 @@ def get_epics_motors():
 
 
 #gs.specpath = os.path.expanduser('/home/xf11id/specfiles/spec0.spec')
-gs.specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_01_11.spec')
+#gs.specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_01_11.spec')
+gs.specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_06_22.spec')
 
 
 #live_specfile_callback = LiveSpecFile()
@@ -210,7 +211,7 @@ def relabel_figure(fig, new_title):
 
 from suitcase.spec import DocumentToSpec
 #spec_cb = DocumentToSpec('/home/xf11id/specfiles/testing.spec')
-spec_cb = DocumentToSpec('/home/xf11id/specfiles/chx_spec_2017_01_11.spec')
+spec_cb = DocumentToSpec('/home/xf11id/specfiles/chx_spec_2017_06_22.spec')
 
 
 import bluesky.spec_api
@@ -245,3 +246,6 @@ def ct(*args, **kwargs):
         plans.append(bluesky.spec_api.ct(*args, **kwargs))
     return plans
     
+def reload_macro(filename):
+    get_ipython().magic("%run -i ~/.ipython/profile_collection/startup/" + filename)
+
