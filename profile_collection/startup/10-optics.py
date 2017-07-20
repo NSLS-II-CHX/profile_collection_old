@@ -1,5 +1,5 @@
 from ophyd import (EpicsMotor, PVPositioner, Device, EpicsSignal,
-                   EpicsSignalRO)
+                   EpicsSignalRO,PVPositionerPC)
 from ophyd import (Component as Cpt, FormattedComponent,
                    DynamicDeviceComponent as DDC)
 
@@ -123,6 +123,53 @@ class Kinoform(Device):
     lx = Cpt(EpicsMotor, '-Ax:XT}Mtr')
     ly = Cpt(EpicsMotor, '-Ax:YT}Mtr')
 
+class SmarPod_x(PVPositionerPC):
+	readback = Cpt(EpicsSignalRO, '-Ax:1}Pos-I')
+	setpoint = Cpt(EpicsSignal, '-Ax:1}Pos-SP')
+	actuate = Cpt(EpicsSignal, '}Move-Cmd')
+	actuate_value = 1
+smp_x = SmarPod_x('XF:11IDB-ES{SPod:1',name='smp_x')
+smp_x.readback.name = 'smp_x'
+
+class SmarPod_y(PVPositionerPC):
+	readback = Cpt(EpicsSignalRO, '-Ax:3}Pos-I')
+	setpoint = Cpt(EpicsSignal, '-Ax:3}Pos-SP')
+	actuate = Cpt(EpicsSignal, '}Move-Cmd')
+	actuate_value = 1
+smp_y = SmarPod_y('XF:11IDB-ES{SPod:1',name='smp_y')
+smp_y.readback.name = 'smp_y'	
+
+class SmarPod_z(PVPositionerPC):
+	readback = Cpt(EpicsSignalRO, '-Ax:2}Pos-I')
+	setpoint = Cpt(EpicsSignal, '-Ax:2}Pos-SP')
+	actuate = Cpt(EpicsSignal, '}Move-Cmd')
+	actuate_value = 1
+smp_z = SmarPod_z('XF:11IDB-ES{SPod:1',name='smp_z')
+smp_z.readback.name = 'smp_z'	
+
+class SmarPod_rx(PVPositionerPC):
+	readback = Cpt(EpicsSignalRO, '-Ax:1}Rot-I')
+	setpoint = Cpt(EpicsSignal, '-Ax:1}Rot-SP')
+	actuate = Cpt(EpicsSignal, '}Move-Cmd')
+	actuate_value = 1
+smp_rx = SmarPod_rx('XF:11IDB-ES{SPod:1',name='smp_rx')
+smp_rx.readback.name = 'smp_rx'
+
+class SmarPod_ry(PVPositionerPC):
+	readback = Cpt(EpicsSignalRO, '-Ax:3}Rot-I')
+	setpoint = Cpt(EpicsSignal, '-Ax:3}Rot-SP')
+	actuate = Cpt(EpicsSignal, '}Move-Cmd')
+	actuate_value = 1
+smp_ry = SmarPod_ry('XF:11IDB-ES{SPod:1',name='smp_ry')
+smp_ry.readback.name = 'smp_ry'
+
+class SmarPod_rz(PVPositionerPC):
+	readback = Cpt(EpicsSignalRO, '-Ax:2}Rot-I')
+	setpoint = Cpt(EpicsSignal, '-Ax:2}Rot-SP')
+	actuate = Cpt(EpicsSignal, '}Move-Cmd')
+	actuate_value = 1
+smp_rz = SmarPod_rz('XF:11IDB-ES{SPod:1',name='smp_rz')
+smp_rz.readback.name = 'smp_rz'
 
 class Diffractometer(Device):
     
@@ -169,6 +216,8 @@ dmm = DMM('XF:11IDA-OP{Mono:DMM', name='dmm')
 mbs = VirtualMotorSlits('XF:11IDA-OP{Slt:MB', name='mbs')  # Mono-beam Slits, check position, e.g., by mbs.xc.readback.value
 tran= Transfocator('XF:11IDA-OP{Lens:', name='tran')    # Transfocator
 s4 = MotorCenterAndGap('XF:11IDB-ES{Slt:4', name='s4')  # temp guard slits
+#smp =SmarPod('XF:11IDB-ES{SPod:1-',name='smp')	# SmarPod
+
 
 # Diagnostic Manipulators
 foil_y = EpicsMotor('XF:11IDA-BI{Foil:Bpm-Ax:Y}Mtr', name='foil_y')
@@ -179,8 +228,6 @@ foil_x = EpicsMotor('XF:11IDB-OP{Mon:Foil-Ax:X}Mtr', name='foil_x')
 #Sample chamber smaract linear stages
 # Note crazy names only for Julien!!!
 #amp = XYMotor('XF:11IDB-OP{BS:Sam', name='amp')
-
-
 
 class amp_motor(Device):
     #x = EpicsMotor('XF:11IDB-OP{BS:Sam-Ax:X}Mtr')
