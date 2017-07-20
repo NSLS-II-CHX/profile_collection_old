@@ -885,3 +885,41 @@ class CHX_utilities_Exception(Exception):
     by LW 03/19/2015
     class to raise utilities functions specific exceptions
     """   
+
+def retrieve_latest_scan(uid='-1',det='default',suffix='default'):
+    '''
+        (From Lutz 95-utilities.py)
+        Retrieve the latest scan results.
+
+        Returns the x,y of scan
+
+    '''
+    # get the scan information:
+    if uid == '-1':
+        uid=-1
+    if det == 'default':
+        if db[uid].start.detectors[0] == 'elm' and suffix=='default':
+            intensity_field='elm_sum_all'
+        elif db[uid].start.detectors[0] == 'elm':
+            intensity_field='elm'+suffix
+        elif suffix == 'default':
+            intensity_field= db[uid].start.detectors[0]+'_stats1_total'
+        else:
+            intensity_field= db[uid].start.detectors[0]+suffix
+    else:
+        if det=='elm' and suffix == 'default':
+            intensity_field='elm_sum_all'
+        elif det=='elm':
+            intensity_field = 'elm'+suffix
+        elif suffix == 'default':
+            intensity_field=det+'_stats1_total'
+        else:
+            intensity_field=det+suffix 
+            
+    field = db[uid].start.motors[0]    
+    
+    #field='dcm_b';intensity_field='elm_sum_all'
+    [x,y,t]=get_data(uid,field=field, intensity_field=intensity_field, det=None, debug=False)  #need to re-write way to get data
+    x=np.array(x)
+    y=np.array(y)
+    return x, y
