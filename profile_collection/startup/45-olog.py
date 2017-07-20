@@ -7,6 +7,10 @@ from collections import defaultdict
 
 simple_template = """{{- start.plan_name }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }})"""
 
+manual_count_template =  """{{- start.plan_name }} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }}) (Measurement: {{start.Measurement}} )"""
+
+ 
+
 count_template = """{{- start.plan_name}} :  {{start.plan_args.num}} ['{{ start.uid[:6] }}'] (scan num: {{ start.scan_id }}) (Measurement: {{start.Measurement}} )
 
 
@@ -66,6 +70,7 @@ acquire  time: TODO
 TEMPLATES = defaultdict(lambda: simple_template)
 TEMPLATES['ct'] = count_template
 TEMPLATES['count'] = count_template
+TEMPLATES['manual_count'] = manual_count_template
 TEMPLATES['dscan'] = single_motor_template
 TEMPLATES['ascan'] = single_motor_template
 TEMPLATES['ID_calibration'] = single_motor_template
