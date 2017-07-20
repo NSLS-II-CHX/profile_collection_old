@@ -5,8 +5,8 @@ HDM_Encoder_PV  = 'XF:11IDA-OP{Mir:HDM-Ax:P}Pos-I'
 
 
 E=np.arange(9.,11.,.05)
-SI_STRIPE = -5
-RH_STRIPE = 5
+SI_STRIPE = -9
+RH_STRIPE = 9
 
 def take_Rdata( voltage, E):
     caput(CHA_Vol_PV, voltage)    
