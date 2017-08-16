@@ -53,7 +53,7 @@ class StandardProsilicaWithTIFF(StandardProsilica):
                suffix='TIFF1:',
                write_path_template='/XF11ID/data/%Y/%m/%d/',
                root='/XF11ID/data',
-               fs=db.event_sources[0].fs)
+               fs=db.reg)
 
 
 class EigerSimulatedFilePlugin(Device, FileStoreBase):
@@ -104,7 +104,7 @@ class EigerBase(AreaDetector):
     file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
                write_path_template='/XF11ID/data/%Y/%m/%d/',
                root='/XF11ID/',
-               fs=db.event_sources[0].fs)
+               fs=db.reg)
     beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
