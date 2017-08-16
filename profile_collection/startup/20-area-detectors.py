@@ -3,7 +3,7 @@ from datetime import datetime
 from ophyd import (ProsilicaDetector, SingleTrigger, TIFFPlugin,
                    ImagePlugin, StatsPlugin, DetectorBase, HDF5Plugin,
                    AreaDetector, EpicsSignal, EpicsSignalRO, ROIPlugin,
-                   TransformPlugin, ProcessPlugin)
+                   TransformPlugin, ProcessPlugin, Device)
 from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.areadetector.base import ADComponent, EpicsSignalWithRBV
 from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
@@ -14,13 +14,7 @@ from ophyd import Component as Cpt, Signal
 from ophyd.utils import set_and_wait
 import filestore.api as fs
 from pathlib import PurePath
-
-#class Elm(SingleTrigger, DetectorBase):
- #   pass
-
-
-
-
+from bluesky.plans import stage, unstage, open_run, close_run, trigger_and_read, pause
 
 
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
@@ -147,7 +141,6 @@ class EigerBase(AreaDetector):
         super().unstage()
 
 
-
 class EigerSingleTrigger(SingleTrigger, EigerBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -180,7 +173,7 @@ class EigerFastTrigger(EigerBase):
         super().__init__(*args, **kwargs)
         self.stage_sigs['cam.trigger_mode'] = 3  # 'External Enable' mode
         self.stage_sigs['shutter_mode'] = 0  # 'EPICS PV'
-        self.stage_sigs['tr.auto_shutter_mode'] = 1 # 'Enable'
+        self.stage_sigs['tr.auto_shutter_mode'] = 1  # 'Enable'
 
     def trigger(self):
         self.dispatch('image', ttime.time())
@@ -201,17 +194,19 @@ xray_eye4_writing = StandardProsilicaWithTIFF('XF:11IDB-BI{Cam:09}', name='xray_
 fs1 = StandardProsilica('XF:11IDA-BI{FS:1-Cam:1}', name='fs1')
 fs2 = StandardProsilica('XF:11IDA-BI{FS:2-Cam:1}', name='fs2')
 fs_wbs = StandardProsilica('XF:11IDA-BI{BS:WB-Cam:1}', name='fs_wbs')
-#dcm_cam = StandardProsilica('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam')
+# dcm_cam = StandardProsilica('XF:11IDA-BI{Mono:DCM-Cam:1}', name='dcm_cam')
 fs_pbs = StandardProsilica('XF:11IDA-BI{BS:PB-Cam:1}', name='fs_pbs')
-#elm = Elm('XF:11IDA-BI{AH401B}AH401B:',)
+# elm = Elm('XF:11IDA-BI{AH401B}AH401B:',)
 
-all_standard_pros = [xray_eye1, xray_eye2, xray_eye3, xray_eye4, xray_eye1_writing, xray_eye2_writing,
-                     xray_eye3_writing, xray_eye4_writing, fs1, fs2, fs_wbs, fs_pbs]
+all_standard_pros = [xray_eye1, xray_eye2, xray_eye3, xray_eye4,
+                     xray_eye1_writing, xray_eye2_writing,
+                     xray_eye3_writing, xray_eye4_writing, fs1, fs2,
+                     fs_wbs, fs_pbs]
 #                     xray_eye3_writing, fs1, fs2, dcm_cam, fs_wbs, fs_pbs]
 for camera in all_standard_pros:
-    camera.read_attrs = ['stats1', 'stats2','stats3','stats4','stats5']
+    camera.read_attrs = ['stats1', 'stats2', 'stats3', 'stats4', 'stats5']
     # camera.tiff.read_attrs = []  # leaving just the 'image'
-    for stats_name in ['stats1', 'stats2','stats3','stats4','stats5']:
+    for stats_name in ['stats1', 'stats2', 'stats3', 'stats4', 'stats5']:
         stats_plugin = getattr(camera, stats_name)
         stats_plugin.read_attrs = ['total']
         camera.stage_sigs['stats_plugin.blocking_callbacks'] = 1
@@ -220,22 +215,28 @@ for camera in all_standard_pros:
     camera.stage_sigs['camera.trans1.blocking_callbacks'] = 1
     camera.stage_sigs['camera.cam.trigger_mode'] = 'Fixed Rate'
 
-
-for camera in [xray_eye1_writing, xray_eye2_writing, xray_eye3_writing, xray_eye4_writing]:
+for camera in [xray_eye1_writing, xray_eye2_writing,
+               xray_eye3_writing, xray_eye4_writing]:
     camera.read_attrs.append('tiff')
     camera.tiff.read_attrs = []
 
+
 def set_eiger_defaults(eiger):
-    "Choose which attributes to read per-step (read_attrs) or per-run (configuration attrs)."
+    """Choose which attributes to read per-step (read_attrs) or
+    per-run (configuration attrs)."""
 
     eiger.file.read_attrs = []
-    eiger.read_attrs = ['file','stats1', 'stats2', 'stats3', 'stats4', 'stats5']
-    for stats in [eiger.stats1, eiger.stats2, eiger.stats3, eiger.stats4, eiger.stats5]:
+    eiger.read_attrs = ['file', 'stats1', 'stats2',
+                        'stats3', 'stats4', 'stats5']
+    for stats in [eiger.stats1, eiger.stats2, eiger.stats3,
+                  eiger.stats4, eiger.stats5]:
         stats.read_attrs = ['total']
-    eiger.configuration_attrs = ['beam_center_x', 'beam_center_y', 'wavelength', 'det_distance', 'cam',
+    eiger.configuration_attrs = ['beam_center_x', 'beam_center_y',
+                                 'wavelength', 'det_distance', 'cam',
                                  'threshold_energy', 'photon_energy']
     eiger.cam.read_attrs = []
-    eiger.cam.configuration_attrs = ['acquire_time', 'acquire_period', 'num_images']
+    eiger.cam.configuration_attrs = ['acquire_time', 'acquire_period',
+                                     'num_images']
 
 
 # Eiger 500k using internal trigger
@@ -243,11 +244,13 @@ def set_eiger_defaults(eiger):
 # set_eiger_defaults(eiger500K_single)
 
 # Eiger 1M using internal trigger
-eiger1m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig1M}', name='eiger1m_single')
+eiger1m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig1M}',
+                                    name='eiger1m_single')
 set_eiger_defaults(eiger1m_single)
 
 # Eiger 4M using internal trigger
-eiger4m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m_single')
+eiger4m_single = EigerSingleTrigger('XF:11IDB-ES{Det:Eig4M}',
+                                    name='eiger4m_single')
 set_eiger_defaults(eiger4m_single)
 
 # Eiger 1M using fast trigger assembly
@@ -258,22 +261,23 @@ set_eiger_defaults(eiger1m)
 eiger4m = EigerFastTrigger('XF:11IDB-ES{Det:Eig4M}', name='eiger4m')
 set_eiger_defaults(eiger4m)
 
-from bluesky.plans import stage, unstage, open_run, close_run, trigger_and_read, pause
+
 def manual_count(det=eiger4m_single):
-	detectors = [det]
-	for det in detectors:
-		yield from stage(det)
-		yield from open_run()
-		print("All slow setup code has been run. Type RE.resume() when ready to acquire.")
-		yield from pause()
-		yield from trigger_and_read(detectors)
-		yield from close_run()
-		for det in detectors:
-			yield from unstage(det)   
+    detectors = [det]
+    for det in detectors:
+        yield from stage(det)
+        yield from open_run()
+        print("All slow setup code has been run. "
+              "Type RE.resume() when ready to acquire.")
+        yield from pause()
+        yield from trigger_and_read(detectors)
+        yield from close_run()
+        for det in detectors:
+            yield from unstage(det)
 
 
 # Comment this out to suppress deluge of logging messages.
-#import logging
-#logging.basicConfig(level=logging.DEBUG)
-#import ophyd.areadetector.filestore_mixins
-#ophyd.areadetector.filestore_mixins.logger.setLevel(logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
+# import ophyd.areadetector.filestore_mixins
+# ophyd.areadetector.filestore_mixins.logger.setLevel(logging.DEBUG)
