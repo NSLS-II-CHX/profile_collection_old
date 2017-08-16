@@ -12,7 +12,6 @@ from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
                                                  FileStoreIterativeWrite)
 from ophyd import Component as Cpt, Signal
 from ophyd.utils import set_and_wait
-import filestore.api as fs
 from pathlib import PurePath
 from bluesky.plans import stage, unstage, open_run, close_run, trigger_and_read, pause
 
@@ -79,19 +78,18 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
 
         ipf = int(self.file_write_images_per_file.get())
         # logger.debug("Inserting resource with filename %s", fn)
-        self._resource = fs.insert_resource('AD_EIGER2',
-                                            fn,
-                                            {'images_per_file': ipf},
-                                            root=str(self.root))
+        self._resource = self._reg.register_resource(
+            'AD_EIGER2',
+            str(self.root), fn,
+            {'images_per_file': ipf})
 
-    def generate_datum(self, key, timestamp):
-        uid = super().generate_datum(key, timestamp)
+    def generate_datum(self, key, timestamp, datum_kwargs):
         # The detector keeps its own counter which is uses label HDF5
         # sub-files.  We access that counter via the sequence_id
         # signal and stash it in the datum.
         seq_id = 1 + int(self.sequence_id.get())  # det writes to the NEXT one
-        fs.insert_datum(self._resource, uid, {'seq_id': seq_id})
-        return uid
+        datum_kwargs.update({'seq_id': seq_id})
+        return super().generate_datum(key, timestamp, datum_kwargs)
 
 
 class EigerBase(AreaDetector):
