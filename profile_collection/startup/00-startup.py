@@ -9,7 +9,7 @@ RE = RunEngine(get_history())
 
 # Set up a Broker.
 from databroker import Broker
-db = Broker.named('csx')
+db = Broker.named('chx')
 
 # Subscribe metadatastore to documents.
 # If this is removed, data is not saved to metadatastore.
