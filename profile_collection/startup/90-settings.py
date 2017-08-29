@@ -10,7 +10,7 @@ def print_md(name, doc):
     if name == 'start':
         print('Metadata:\n', repr(doc))
 
-RE.subscribe(print_scanid)
+# RE.subscribe(print_md)
 
 #from eiger_io.fs_handler import LazyEigerHandler
 #db.fs.register_handler("AD_EIGER", LazyEigerHandler)
