@@ -12,7 +12,6 @@ from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
                                                  FileStoreIterativeWrite)
 from ophyd import Component as Cpt, Signal
 from ophyd.utils import set_and_wait
-import filestore.api as fs
 from pathlib import PurePath
 
 #class Elm(SingleTrigger, DetectorBase):
@@ -59,7 +58,7 @@ class StandardProsilicaWithTIFF(StandardProsilica):
                suffix='TIFF1:',
                write_path_template='/XF11ID/data/%Y/%m/%d/',
                root='/XF11ID/data',
-               fs=db.event_sources[0].fs)
+               reg=db.reg)
 
 
 class EigerSimulatedFilePlugin(Device, FileStoreBase):
@@ -110,7 +109,7 @@ class EigerBase(AreaDetector):
     file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
                write_path_template='/XF11ID/data/%Y/%m/%d/',
                root='/XF11ID/',
-               fs=db.event_sources[0].fs)
+               reg=db.reg)
     beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')

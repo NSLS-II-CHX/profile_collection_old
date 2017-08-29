@@ -1,7 +1,7 @@
 import time
 from ophyd import EpicsMotor
 from epics import caput
-from filestore import RawHandler
+from databroker.assets.path_only_handlers import RawHandler
 from math import radians
 
 
