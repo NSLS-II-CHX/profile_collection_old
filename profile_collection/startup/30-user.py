@@ -117,8 +117,8 @@ def feedback_ON():
     '''
     #mov(foil_x, 8)
     beam_off()  #using monitor holder to protect the sample
-    fast_sh.open()
-    att.set_T(1)
+    #fast_sh.open()
+    #att.set_T(1)
     sleep(4)
     caput('XF:11IDA-OP{Mir:HDM-Ax:P}Sts:FB-Sel',0)  #turn off epics pid feedback on HDM encoder
     caput('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP',1)
@@ -142,9 +142,11 @@ def feedback_OFF_backup():
     caput('XF:11IDA-OP{Mir:HDM-Ax:P}Sts:FB-Sel',1)  #feedback on HDM ON
 
 def feedback_OFF(): 
-    caput('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP',0)
-    caput('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP',0)
-    caput('XF:11IDA-OP{Mir:HDM-Ax:P}Sts:FB-Sel',1)  #feedback on HDM ON
+	hdm_setpoint=caget('XF:11IDA-OP{Mir:HDM-Ax:P}Pos-I')
+	caput('XF:11IDA-OP{Mir:HDM-Ax:P}PID-SP',hdm_setpoint)    
+	caput('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP',0)
+	caput('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP',0)
+	caput('XF:11IDA-OP{Mir:HDM-Ax:P}Sts:FB-Sel',1)  #feedback on HDM ON
 
 # alignment/measurement macros are better defined in user specific locations
 #def alignment_mode():
@@ -303,8 +305,9 @@ def eiger4m_series(expt=.1,acqp='auto',imnum=5,comment=''):
 	RE.md['data path']=idpath
 	RE.md['sequence id']=str(seqid)
 	RE.md['transmission']=att.get_T()
+	RE.md['diff_yh']=str(round(diff.yh.user_readback.value,4))
 	## add experiment specific metadata:
-	RE.md['T_yoke']=str(caget('XF:11IDB-ES{Env:01-Chan:C}T:C-I'))
+	#RE.md['T_yoke']=str(caget('XF:11IDB-ES{Env:01-Chan:C}T:C-I'))
 	#RE.md['T_sample']=str(caget('XF:11IDB-ES{Env:01-Chan:D}T:C-I'))
 	if caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP') == 1:
 		RE.md['feedback_x']='on'
@@ -330,8 +333,9 @@ def eiger4m_series(expt=.1,acqp='auto',imnum=5,comment=''):
 	a=RE.md.pop('number of images')
 	a=RE.md.pop('data path')
 	a=RE.md.pop('sequence id')
+	a=RE.md.pop('diff_yh')
 	## remove experiment specific dictionary key
-	a=RE.md.pop('T_yoke')
+	#a=RE.md.pop('T_yoke')
 	#a=RE.md.pop('T_sample')
 	a=RE.md.pop('feedback_x')
 	a=RE.md.pop('feedback_y')
@@ -744,6 +748,7 @@ def check_bl():
 		fe_sh.open()
 		foe_sh.open()
 		fast_sh.open()
+		att.set_T(1)
 		feedback_ON()
 		sleep(2)
 		if caget('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP')==1 and caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP')==1 and abs(caget('XF:11IDB-BI{XBPM:02}Pos:X-I'))+abs(caget('XF:11IDB-BI{XBPM:02}Pos:Y-I'))<.5:
@@ -852,11 +857,11 @@ def kinoform_focus(foc='horz_SAXS_9650'):
 	if foc == 	'vert_WAXS_9750':
 		mov([k1.z,k1.x,k1.y,k1.chi,k1.theta,k1.phi,k1.lx,k1.ly],[-20.,4.95,-3.167,2.0,-.98,-.68,9.244,3.93])
 	if foc == 	'vert_WAXS_12800':
-		mov([k1.z,k1.x,k1.y,k1.chi,k1.theta,k1.phi,k1.lx,k1.ly],[0.,4.95,-3.167,2.0,.2,-.68,9.042,4.852])
+		mov([k1.z,k1.x,k1.y,k1.chi,k1.theta,k1.phi,k1.lx,k1.ly],[0.,4.55,-3.167,2.65,.2,-.68,9.098,4.916])
 	if foc == 	'horz_WAXS_12800':
 		mov([k2.z,k2.x,k2.y,k2.chi,k2.theta,k2.phi,k2.lx,k2.ly],[0.,0.002,4.6,.2,-1.24,-2.,-.868,6.975])
 	if foc == 	'horz_WAXS_9750':
-		mov([k2.z,k2.x,k2.y,k2.chi,k2.theta,k2.phi,k2.lx,k2.ly],[0.,0.002,4.6,.2,-1.24,-2.,0.262,7.071])
+		mov([k2.z,k2.x,k2.y,k2.chi,k2.theta,k2.phi,k2.lx,k2.ly],[0.,-.44,4.6,.2,-1.24,-2.,-.868,7.049])
 
 
 
