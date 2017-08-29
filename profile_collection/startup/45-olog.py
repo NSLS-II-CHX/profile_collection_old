@@ -1,6 +1,8 @@
 from bluesky.callbacks.olog import logbook_cb_factory
 import readline
 from collections import defaultdict
+import queue
+import threading
 
 #{{- readline.get_history_item(1)}}
 
@@ -98,5 +100,23 @@ logbook = simple_olog_client
 
 logbook_cb = logbook_cb_factory(configured_logbook_func, desc_dispatch=TEMPLATES)
 
-# Comment this line to turn off automatic log entries from bluesky.
-RE.subscribe('start', logbook_cb)
+def submit_to_olog(queue, cb):
+    while True:
+        name, doc = queue.get()  # waits until document is available
+        try:
+            cb(name, doc)
+        except Exception as exc:
+            warn('This olog is giving errors. This will not be logged.'
+                 'Error:' + str(exc))
+
+olog_queue = queue.Queue(maxsize=100)
+olog_thread = threading.Thread(target=submit_to_olog, args=(olog_queue, logbook_cb), daemon=True)
+olog_thread.start()
+
+def send_to_olog_queue(name, doc):
+    try:
+        olog_queue.put((name, doc), block=False)
+    except queue.Full:
+        warn('The olog queue is full. This will not be logged.')
+
+RE.subscribe(send_to_olog_queue, 'start')
