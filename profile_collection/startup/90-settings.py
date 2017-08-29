@@ -1,10 +1,8 @@
-gs.DETS = [xray_eye3]
 import logging
 
 # metadata set at startup
-gs.RE.md['owner'] = 'xf11id'
-
-gs.RE.md['beamline_id'] = 'CHX'
+RE.md['owner'] = 'xf11id'
+RE.md['beamline_id'] = 'CHX'
 # removing 'custom' as it is raising an exception in 0.3.2
 # gs.RE.md['custom'] = {}
 
@@ -19,9 +17,7 @@ def print_md(name, doc):
     if name == 'start':
         print('Metadata:\n', repr(doc))
 
-gs.RE.subscribe('start', print_scanid)
-
-from ophyd.commands import wh_pos, log_pos, mov, movr
+RE.subscribe(print_scanid)
 
 #from eiger_io.fs_handler import LazyEigerHandler
 #db.fs.register_handler("AD_EIGER", LazyEigerHandler)
