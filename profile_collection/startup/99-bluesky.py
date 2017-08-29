@@ -189,6 +189,13 @@ def relabel_figure(fig, new_title):
 
 
 from suitcase.spec import DocumentToSpec
+import suitcase.spec
+
+# Monkey-patch module globals.
+suitcase.spec._SCANS_WITHOUT_MOTORS.extend(['count'])
+suitcase.spec._SCANS_WITH_MOTORS.extend(['scan', 'relative_scan'])
+suitcase.spec._BLUESKY_PLAN_NAMES.extend(['count', 'scan', 'relative_scan'])
+suitcase.spec._SPEC_SCAN_NAMES.extend(['count', 'scan', 'relative_scan'])
 specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_06_22.spec')
 #spec_cb = DocumentToSpec('/home/xf11id/specfiles/testing.spec')
 spec_cb = DocumentToSpec(specpath)
