@@ -1,4 +1,5 @@
 import time as ttime  # tea time
+from types import SimpleNamespace
 from datetime import datetime
 from ophyd import (ProsilicaDetector, SingleTrigger, TIFFPlugin,
                    ImagePlugin, StatsPlugin, DetectorBase, HDF5Plugin,
@@ -63,6 +64,7 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
     file_write_images_per_file = ADComponent(EpicsSignalWithRBV,
                                              'FWNImagesPerFile')
     current_run_start_uid = Cpt(Signal, value='', add_prefix=())
+    enable = SimpleNamespace(get=lambda: True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,13 +76,13 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
         set_and_wait(self.file_path, write_path)
         set_and_wait(self.file_write_name_pattern, '{}_$id'.format(res_uid))
         super().stage()
-        fn = (PurePath(self.file_path.get()) / res_uid).relative_to(self.root)
+        fn = (PurePath(self.file_path.get()) / res_uid).relative_to(self.fs_root)
 
         ipf = int(self.file_write_images_per_file.get())
         # logger.debug("Inserting resource with filename %s", fn)
         self._resource = self._reg.register_resource(
             'AD_EIGER2',
-            str(self.root), fn,
+            str(self.fs_root), fn,
             {'images_per_file': ipf})
 
     def generate_datum(self, key, timestamp, datum_kwargs):
@@ -137,6 +139,10 @@ class EigerBase(AreaDetector):
     def unstage(self):
         set_and_wait(self.manual_trigger, 0)
         super().unstage()
+
+    @property
+    def hints(self):
+        return {'fields': [eiger4m_single.stats1.total.name]}
 
 
 class EigerSingleTrigger(SingleTrigger, EigerBase):
