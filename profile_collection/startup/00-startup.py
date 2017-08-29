@@ -1,77 +1,81 @@
-import logging
-import time
-from contextlib import contextmanager
+# Make ophyd listen to pyepics.
+from ophyd import setup_ophyd
+setup_ophyd()
 
-@contextmanager
-def progress(text):
-    start = time.time()
-    print(text)
-    yield
-    print('Done in %f.1 seconds' % (time.time() - start))
+# Set up a RunEngine and use metadata backed by a sqlite file.
+from bluesky import RunEngine
+from bluesky.utils import get_history
+RE = RunEngine(get_history())
 
-with progress('setting up ophyd'):
-    # Make ophyd listen to pyepics.
-    from ophyd import setup_ophyd
-    setup_ophyd()
+# Set up a Broker.
+from databroker import Broker
+db = Broker.named('csx')
 
-with progress('importing matplotlib'):
-    import matplotlib.pyplot as plt
-    plt.ion()
+# Subscribe metadatastore to documents.
+# If this is removed, data is not saved to metadatastore.
+RE.subscribe(db.insert)
 
-with progress('qt kicking'):
-    # Make plots update live while scans run.
-    from bluesky.utils import install_qt_kicker
-    install_qt_kicker()
+# Set up SupplementalData.
+from bluesky import SupplementalData
+sd = SupplementalData()
+RE.preprocessors.append(sd)
 
-with progress('ophyd, bluesky imports'):
-    # convenience imports
-    from ophyd.commands import *
-    from bluesky.callbacks import *
-    # from bluesky.scientific_callbacks import plot_peak_stats
-    # from bluesky.plans import *
-    from bluesky.plan_tools import print_summary
-    from bluesky.spec_api import *
-    from bluesky.global_state import gs, abort, stop, resume
+# Add a progress bar.
+from bluesky.utils import ProgressBarManager
+pbar_manager = ProgressBarManager()
+RE.waiting_hook = pbar_manager
 
-with progress('databroker import'):
-    from databroker import (DataBroker as db, get_events, get_images,
-                            get_table, get_fields, restream, process)
-from time import sleep
+# Register bluesky IPython magics.
+from bluesky.magics import BlueskyMagics
+get_ipython().register_magics(BlueskyMagics)
+
+# Set up the BestEffortCallback.
+from bluesky.callbacks.best_effort import BestEffortCallback
+bec = BestEffortCallback()
+RE.subscribe(bec)
+peaks = bec.peaks  # just as alias for less typing
+
+# At the end of every run, verify that files were saved and
+# print a confirmation message.
+from bluesky.callbacks.broker import verify_files_saved
+# RE.subscribe(post_run(verify_files_saved), 'stop')
+
+# Import matplotlib and put it in interactive mode.
+import matplotlib.pyplot as plt
+plt.ion()
+
+# Make plots update live while scans run.
+from bluesky.utils import install_qt_kicker
+install_qt_kicker()
+
+# Optional: set any metadata that rarely changes.
+# RE.md['beamline_id'] = 'YOUR_BEAMLINE_HERE'
+
+# convenience imports
+from bluesky.callbacks import *
+from bluesky.callbacks.broker import *
+from bluesky.simulators import *
+from bluesky.plans import *
 import numpy as np
 
-RE = gs.RE  # convenience alias
+from pyOlog.ophyd_tools import *
 
+# Uncomment the following lines to turn on verbose messages for
+# debugging.
+# import logging
+# ophyd.logger.setLevel(logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
-from metadatastore.mds import MDS
-# from metadataclient.mds import MDS
-from databroker import Broker
-from databroker.core import register_builtin_handlers
-from filestore.fs import FileStore
+# Add a callback that prints scan IDs at the start of each scan.
+def print_scan_ids(name, start_doc):
+    print("Transient Scan ID: {0} @ {1}".format(start_doc['scan_id'],time.strftime("%Y/%m/%d %H:%M:%S")))
+    print("Persistent Unique Scan ID: '{0}'".format(start_doc['uid']))
 
-mds = MDS({'host': 'xf11id-srv1',
-           'database': 'datastore',
-           'port': 27017,
-           'timezone': 'US/Eastern'}, auth=False)
-# mds = MDS({'host': CA, 'port': 7770})
-
-db = Broker(mds, FileStore({'host': 'xf11id-srv1',
-           'database': 'filestore',
-           'port': 27017}))
-register_builtin_handlers(db.fs)
-
-gs.RE.subscribe('all', db.mds.insert)
-
-from epics import caput, caget
-
-# c.InteractiveShellApp.extensions = ['pyOlog.cli.ipy']
-
-gs.MD_TIME_KEY = 'count_time'  # this will the default in bluesky v0.5.3+
+RE.subscribe(print_scan_ids, 'start')
 
 
 from chxtools import attfuncs as att
 from chxtools import xfuncs as xf
 from chxtools.bpm_stability import bpm_read
 from chxtools import transfuncs as trans  
-
-
 from chxtools import bpm_stability as bpmst
