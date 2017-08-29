@@ -214,11 +214,11 @@ for camera in all_standard_pros:
     for stats_name in ['stats1', 'stats2','stats3','stats4','stats5']:
         stats_plugin = getattr(camera, stats_name)
         stats_plugin.read_attrs = ['total']
-        camera.stage_sigs['stats_plugin.blocking_callbacks'] = 1
+        camera.stage_sigs[stats_plugin.blocking_callbacks] = 1
 
-    camera.stage_sigs['camera.roi1.blocking_callbacks'] = 1
-    camera.stage_sigs['camera.trans1.blocking_callbacks'] = 1
-    camera.stage_sigs['camera.cam.trigger_mode'] = 'Fixed Rate'
+    camera.stage_sigs[camera.roi1.blocking_callbacks] = 1
+    camera.stage_sigs[camera.trans1.blocking_callbacks] = 1
+    camera.stage_sigs[camera.cam.trigger_mode] = 'Fixed Rate'
 
 
 for camera in [xray_eye1_writing, xray_eye2_writing, xray_eye3_writing, xray_eye4_writing]:
