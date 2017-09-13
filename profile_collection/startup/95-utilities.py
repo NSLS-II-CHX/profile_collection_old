@@ -10,7 +10,10 @@ import datetime as dtt
 import time
 import numpy as np
 from PIL import Image
-from databroker import db, get_fields, get_images, get_table
+# from databroker import db, get_fields, get_images, get_table
+get_fields = db.get_fields
+get_images = db.get_images
+get_table = db.get_table
 from matplotlib import pyplot as pltfrom
 from lmfit import  Model
 from lmfit import minimize, Parameters, Parameter, report_fit
