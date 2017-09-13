@@ -16,6 +16,14 @@ class MotorCenterAndGap(Device):
     xg = Cpt(EpicsMotor, '-Ax:XGap}Mtr')
     yg = Cpt(EpicsMotor, '-Ax:YGap}Mtr')
 
+    @property
+    def hints(self):
+        fields = []
+        for name in self.signal_names:
+            motor = getattr(self, name)
+            fields.extend(motor.hints['fields'])
+        return {'fields': fields}
+
 
 class VirtualGap(PVPositioner):
     readback = Cpt(EpicsSignalRO, 't2.C')
@@ -55,7 +63,7 @@ class VirtualMotorSlits(Blades, VirtualMotorCenterAndGap):
 #    def __init__(self, *args, **kwargs):
 #      super().__init__(*args, **kwargs)
 #        self.xc.readback.name = self.name
-#		self.yc.readback.name = self.name
+#        self.yc.readback.name = self.name
  #       self.xg.readback.name = self.name
     pass
 
@@ -88,10 +96,18 @@ class DCM(Device):
  
 
 class SAXSBeamStop( Device):
-	x = Cpt( 	EpicsMotor, '-Ax:X}Mtr' )
-	y1 = Cpt( 	EpicsMotor, '-Ax:YFT}Mtr')
-	x2 = Cpt( 	EpicsMotor, '-Ax:XFB}Mtr')
-	y2 = Cpt( 	EpicsMotor, '-Ax:YFB}Mtr')
+    x = Cpt(     EpicsMotor, '-Ax:X}Mtr' )
+    y1 = Cpt(     EpicsMotor, '-Ax:YFT}Mtr')
+    x2 = Cpt(     EpicsMotor, '-Ax:XFB}Mtr')
+    y2 = Cpt(     EpicsMotor, '-Ax:YFB}Mtr')
+  
+    @property
+    def hints(self):
+        fields = []
+        for name in self.signal_names:
+            motor = getattr(self, name)
+            fields.extend(motor.hints['fields'])
+        return {'fields': fields}
  
 
 class DMM(Device):
@@ -124,50 +140,50 @@ class Kinoform(Device):
     ly = Cpt(EpicsMotor, '-Ax:YT}Mtr')
 
 class SmarPod_x(PVPositionerPC):
-	readback = Cpt(EpicsSignalRO, '-Ax:1}Pos-I')
-	setpoint = Cpt(EpicsSignal, '-Ax:1}Pos-SP')
-	actuate = Cpt(EpicsSignal, '}Move-Cmd')
-	actuate_value = 1
+    readback = Cpt(EpicsSignalRO, '-Ax:1}Pos-I')
+    setpoint = Cpt(EpicsSignal, '-Ax:1}Pos-SP')
+    actuate = Cpt(EpicsSignal, '}Move-Cmd')
+    actuate_value = 1
 smp_x = SmarPod_x('XF:11IDB-ES{SPod:1',name='smp_x')
 smp_x.readback.name = 'smp_x'
 
 class SmarPod_y(PVPositionerPC):
-	readback = Cpt(EpicsSignalRO, '-Ax:3}Pos-I')
-	setpoint = Cpt(EpicsSignal, '-Ax:3}Pos-SP')
-	actuate = Cpt(EpicsSignal, '}Move-Cmd')
-	actuate_value = 1
+    readback = Cpt(EpicsSignalRO, '-Ax:3}Pos-I')
+    setpoint = Cpt(EpicsSignal, '-Ax:3}Pos-SP')
+    actuate = Cpt(EpicsSignal, '}Move-Cmd')
+    actuate_value = 1
 smp_y = SmarPod_y('XF:11IDB-ES{SPod:1',name='smp_y')
-smp_y.readback.name = 'smp_y'	
+smp_y.readback.name = 'smp_y'    
 
 class SmarPod_z(PVPositionerPC):
-	readback = Cpt(EpicsSignalRO, '-Ax:2}Pos-I')
-	setpoint = Cpt(EpicsSignal, '-Ax:2}Pos-SP')
-	actuate = Cpt(EpicsSignal, '}Move-Cmd')
-	actuate_value = 1
+    readback = Cpt(EpicsSignalRO, '-Ax:2}Pos-I')
+    setpoint = Cpt(EpicsSignal, '-Ax:2}Pos-SP')
+    actuate = Cpt(EpicsSignal, '}Move-Cmd')
+    actuate_value = 1
 smp_z = SmarPod_z('XF:11IDB-ES{SPod:1',name='smp_z')
-smp_z.readback.name = 'smp_z'	
+smp_z.readback.name = 'smp_z'    
 
 class SmarPod_rx(PVPositionerPC):
-	readback = Cpt(EpicsSignalRO, '-Ax:1}Rot-I')
-	setpoint = Cpt(EpicsSignal, '-Ax:1}Rot-SP')
-	actuate = Cpt(EpicsSignal, '}Move-Cmd')
-	actuate_value = 1
+    readback = Cpt(EpicsSignalRO, '-Ax:1}Rot-I')
+    setpoint = Cpt(EpicsSignal, '-Ax:1}Rot-SP')
+    actuate = Cpt(EpicsSignal, '}Move-Cmd')
+    actuate_value = 1
 smp_rx = SmarPod_rx('XF:11IDB-ES{SPod:1',name='smp_rx')
 smp_rx.readback.name = 'smp_rx'
 
 class SmarPod_ry(PVPositionerPC):
-	readback = Cpt(EpicsSignalRO, '-Ax:3}Rot-I')
-	setpoint = Cpt(EpicsSignal, '-Ax:3}Rot-SP')
-	actuate = Cpt(EpicsSignal, '}Move-Cmd')
-	actuate_value = 1
+    readback = Cpt(EpicsSignalRO, '-Ax:3}Rot-I')
+    setpoint = Cpt(EpicsSignal, '-Ax:3}Rot-SP')
+    actuate = Cpt(EpicsSignal, '}Move-Cmd')
+    actuate_value = 1
 smp_ry = SmarPod_ry('XF:11IDB-ES{SPod:1',name='smp_ry')
 smp_ry.readback.name = 'smp_ry'
 
 class SmarPod_rz(PVPositionerPC):
-	readback = Cpt(EpicsSignalRO, '-Ax:2}Rot-I')
-	setpoint = Cpt(EpicsSignal, '-Ax:2}Rot-SP')
-	actuate = Cpt(EpicsSignal, '}Move-Cmd')
-	actuate_value = 1
+    readback = Cpt(EpicsSignalRO, '-Ax:2}Rot-I')
+    setpoint = Cpt(EpicsSignal, '-Ax:2}Rot-SP')
+    actuate = Cpt(EpicsSignal, '}Move-Cmd')
+    actuate_value = 1
 smp_rz = SmarPod_rz('XF:11IDB-ES{SPod:1',name='smp_rz')
 smp_rz.readback.name = 'smp_rz'
 
@@ -192,6 +208,13 @@ class Diffractometer(Device):
     zv = Cpt(EpicsMotor, '-Ax:ZV}Mtr')
     xv2 = Cpt(EpicsMotor, '-Ax:XV2}Mtr')
 
+    @property
+    def hints(self):
+        fields = []
+        for name in self.signal_names:
+            motor = getattr(self, name)
+            fields.extend(motor.hints['fields'])
+        return {'fields': fields}
 
 
 
@@ -216,7 +239,9 @@ dmm = DMM('XF:11IDA-OP{Mono:DMM', name='dmm')
 mbs = VirtualMotorSlits('XF:11IDA-OP{Slt:MB', name='mbs')  # Mono-beam Slits, check position, e.g., by mbs.xc.readback.value
 tran= Transfocator('XF:11IDA-OP{Lens:', name='tran')    # Transfocator
 s4 = MotorCenterAndGap('XF:11IDB-ES{Slt:4', name='s4')  # temp guard slits
-#smp =SmarPod('XF:11IDB-ES{SPod:1-',name='smp')	# SmarPod
+fsh_x=EpicsMotor('XF:11IDB-OP{FS:1-Ax:X}Mtr', name='fsh_x')  # fast shutter positioner: X
+fsh_y=EpicsMotor('XF:11IDB-OP{FS:1-Ax:Y}Mtr', name='fsh_y')  # fast shutter positioner: Y
+#smp =SmarPod('XF:11IDB-ES{SPod:1-',name='smp')    # SmarPod
 
 
 # Diagnostic Manipulators
