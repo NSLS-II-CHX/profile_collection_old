@@ -86,6 +86,7 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=elm.sum_
 	inner = cycler(dcm.b,th_B)+cycler(ivu_gap,gap)
 	#plan = PlanND([det],inner)
 	plan = PlanND([det],inner)
+	#RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
 	RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
 
 #### crude test only!!! ####
@@ -196,7 +197,9 @@ suitcase.spec._SCANS_WITHOUT_MOTORS.extend(['count'])
 suitcase.spec._SCANS_WITH_MOTORS.extend(['scan', 'relative_scan'])
 suitcase.spec._BLUESKY_PLAN_NAMES.extend(['count', 'scan', 'relative_scan'])
 suitcase.spec._SPEC_SCAN_NAMES.extend(['count', 'scan', 'relative_scan'])
-specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_06_22.spec')
+#specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_06_22.spec')
+specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_09_08.spec')
+
 #spec_cb = DocumentToSpec('/home/xf11id/specfiles/testing.spec')
 spec_cb = DocumentToSpec(specpath)
 
