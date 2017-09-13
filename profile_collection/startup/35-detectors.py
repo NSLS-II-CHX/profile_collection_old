@@ -15,7 +15,10 @@ class Elm(Device):
 	sum_x = Cpt(EpicsSignalRO, 'SumX:MeanValue_RBV')
 	sum_y = Cpt(EpicsSignalRO, 'SumY:MeanValue_RBV')
 	sum_all = Cpt(EpicsSignalRO, 'SumAll:MeanValue_RBV')
-
+	@property
+	def hints(self):
+            return {'fields': [self.sum_all.name,
+                           ]}
 
 
 
@@ -24,7 +27,7 @@ xbpm.read_attrs = ['x', 'y', 'ca', 'cb', 'cc', 'cd']
 
 
 elm = Elm('XF:11IDA-BI{AH401B}AH401B:', name='elm')
-elm.read_attrs = ['sum_x', 'sum_y', 'sum_all']
+#elm.read_attrs = ['sum_x', 'sum_y', 'sum_all']
 
 
 

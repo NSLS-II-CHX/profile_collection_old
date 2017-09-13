@@ -47,6 +47,11 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
     # only so that it can ensure that the plugin is not auto-saving.
     tiff = Cpt(TIFFPluginEnsuredOff, suffix='TIFF1:')
 
+    @property
+    def hints(self):
+        return {'fields': [self.stats1.total.name,
+                           ]}
+
 
 class StandardProsilicaWithTIFF(StandardProsilica):
     tiff = Cpt(TIFFPluginWithFileStore,
@@ -142,7 +147,7 @@ class EigerBase(AreaDetector):
 
     @property
     def hints(self):
-        return {'fields': [eiger4m_single.stats1.total.name]}
+        return {'fields': [self.stats1.total.name]}
 
 
 class EigerSingleTrigger(SingleTrigger, EigerBase):
