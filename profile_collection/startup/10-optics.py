@@ -75,7 +75,7 @@ class XYMotor(Device):
 
 class XYThetaMotor(XYMotor):
     "used for GI mirror"
-    theta = Cpt(EpicsMotor, '-Ax:Th}Mtr')
+    th = Cpt(EpicsMotor, '-Ax:Th}Mtr')
 
 
 class HorizontalDiffractionMirror(XYMotor):
