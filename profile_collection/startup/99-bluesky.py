@@ -89,6 +89,34 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=elm.sum_
 	#RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
 	RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
 
+
+def Energy_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=[eiger1m_single]): 
+	"""
+    Energy_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=[eiger1m_single]):
+    energy scan: Scanning both Bragg axis and gap of IVU in a linked fashion
+	calling sequence: E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5 det=elm.sum_all.value)
+	energy: X-ray energy in [keV] & xtal define the Bragg angles used in the scan via xf.get_Bragg()
+	gap: manually entered list of gap values with gapmode="manual" OR calculated from xf.get_gap(energy, harm, default id map) with gapmode="auto"
+	to-do: allow detector selection from 'detselect()'
+	by LW June 2016	
+	"""
+	from cycler import cycler
+	from bluesky import PlanND
+	th_B=list(-1*xf.get_Bragg(xtal,energy)[:,0])
+	if gapmode == "manual":
+		if len(gap) == len(energy):
+			gap = gap
+			print('using manually entered gap values...')
+		else: print('error: length of manually entered list of gap value does not match number of energy points')
+	elif gapmode =="auto":
+		gap=list(xf.get_gap(energy,harm))  
+		print('using calculated gap values from xfuncs!')
+	inner = cycler(dcm.b,th_B)+cycler(ivu_gap,gap)
+	#plan = PlanND([det],inner)
+	plan = PlanND(det,inner)
+	#RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
+	RE(plan)
+
 #### crude test only!!! ####
 def refl_scan(incident_angle):
 	from cycler import cycler
