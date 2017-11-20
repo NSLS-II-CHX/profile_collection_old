@@ -48,7 +48,7 @@ colors = np.array( ['darkorange', 'mediumturquoise', 'seashell', 'mediumaquamari
            'coral', 'lightyellow', 'chocolate', 'lavenderblush', 'darkred', 'lightseagreen', 
            'darkviolet', 'lightcyan', 'cadetblue', 'blanchedalmond', 'midnightblue', 
            'darksage', 'lightsteelblue', 'darkcyan', 'floralwhite', 'darkgray', 
-           'lavender', 'sandybrown', 'cornflowerblue', 'sage',  'gray', 
+           'lavender', 'sandybrown', 'cornflowerblue',  'gray', 
            'mediumpurple', 'lightslategrey',   'seagreen', 
            'silver', 'darkmagenta', 'darkslategrey', 'darkgoldenrod', 'rosybrown', 
            'goldenrod',   'darkturquoise', 'plum',

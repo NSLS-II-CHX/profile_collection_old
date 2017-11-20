@@ -49,7 +49,7 @@ class StandardProsilica(SingleTrigger, ProsilicaDetector):
 
     @property
     def hints(self):
-        return {'fields': [self.stats1.total.name,
+        return {'fields': [self.stats1.total.name
                            ]}
 
 
