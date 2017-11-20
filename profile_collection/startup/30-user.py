@@ -12,11 +12,13 @@ from bluesky.utils import ProgressBarManager
 
 def beam_on():
     # foil_x.move(-22.0)
-    yield from mv(foil_x, -22.0)
+    yield from mv(foil_x, -18.5)
+    print('Empty slot in the beam - sample exposed')
 
 def beam_off():
     # foil_x.move(-21.0)
-    yield from mv(foil_x, -21.0)
+    yield from mv(foil_x, -21)
+    print('Protecting the sample with the Monitor W edge')
 
 
 @magics_class
@@ -110,18 +112,56 @@ sam_phi = diff.phh
 #sam_th = diff.thh
 #sam_chi = diff.chh
 
-#def W_in():
-    #mov(diff.zv,0.20016)     - these were for the liquid GI-SAXS setup, Wiegart 2016-1
-    #mov(diff.yv, 6.48889)
-    #mov(diff.xv2,-21.8501)
+
+def ac_scan2( ):    
+    for i in range(40):
+        #RE(mvr(diff.yh, 0.02))
+        yhv =     diff.yh.user_readback.value
+
+        series(det='eiger4m',expt= 1/3, acqp='auto', imnum=1, feedback_on=True,comment=RE.md['sample']+ 'yh=U%s'%yhv+ '1 sec, 1 frames, MBS 0.4 x 0.05 use Tim: epix Det_Run 20')
+        RE(mvr(diff.yh, -0.1))
+       #        time.sleep(  0.2  )
+    RE(mvr(diff.xh, -0.02))
+    for i in range(20):
+        yhv =     diff.yh.user_readback.value
+        series(det='eiger4m',expt= 1/3, acqp='auto', imnum=1, feedback_on=True,comment=RE.md['sample']+ 'yh=D%s'%yhv+ '1 sec, 1 frames, MBS 0.4 x 0.05 use Tim: epix Det_Run 20')
+
+
+
+def ac_scan( ):    
+    for i in range(80):
+        #RE(mvr(diff.yh, 0.02))
+        yhv =     diff.yh.user_readback.value
+        series(det='eiger4m',expt= 1/3, acqp='auto', imnum=1, feedback_on=True,comment=RE.md['sample']+ 'yh=U%s'%yhv+ '1 sec, 1 frames, MBS 0.4 x 0.05 use Tim: epix Det_Run 17')
+        RE(mvr(diff.yh, -0.1))
+       #        time.sleep(  0.2  )
+    RE(mvr(diff.xh, -0.02))
+    for i in range(40):
+        yhv =     diff.yh.user_readback.value
+        series(det='eiger4m',expt= 1/3, acqp='auto', imnum=1, feedback_on=True,comment=RE.md['sample']+ 'yh=D%s'%yhv+ '1 sec, 1 frames, MBS 0.4 x 0.05 use Tim: epix Det_Run 17')
+        RE(mvr(diff.yh, 0.2))
+        #time.sleep(  0.2  )
+      
+
+
+
+
+
 
 def goto_500k():
     caput('XF:11IDB-ES{Det:SAXS-Ax:X}Mtr.VAL',304.6242)
     caput('XF:11IDB-ES{Det:SAXS-Ax:Y}Mtr.VAL',151.7567)   
 
+def goto_timepix():
+    caput('XF:11IDB-ES{Det:SAXS-Ax:X}Mtr.VAL',-54.87 -10 )
+    caput('XF:11IDB-ES{Det:SAXS-Ax:Y}Mtr.VAL',192.54)   
+
+
 def goto_4m():
-    caput('XF:11IDB-ES{Det:SAXS-Ax:X}Mtr.VAL',477.9539)
-    caput('XF:11IDB-ES{Det:SAXS-Ax:Y}Mtr.VAL',83.7567)
+#    caput('XF:11IDB-ES{Det:SAXS-Ax:X}Mtr.VAL',477.9539)
+#    caput('XF:11IDB-ES{Det:SAXS-Ax:Y}Mtr.VAL',83.7567)
+    caput('XF:11IDB-ES{Det:SAXS-Ax:X}Mtr.VAL',118.459)
+    caput('XF:11IDB-ES{Det:SAXS-Ax:Y}Mtr.VAL',-124.357)
 
 def ct_500k(expt=.0001,frame_rate=9000,imnum=1,comment='eiger500K image'):
     caput('XF:11IDB-ES{Det:Eig500K}cam1:FWClear',1)   #remove files from detector
@@ -152,33 +192,33 @@ bpm_readings = BPMReadings('', name='bpm_readings')
 
 def feedback_ON():
     '''
-    Turn beam position feedback on and protect the sample.
-    
-    moves the pin diode (monitor chamber) in the beam to protect the sample while the fast shutter is opened
-    sets attenuator to 1
-    opens the fast shutter
-    sets att to 1
-    turns feedback ON
+    turns Epics feedback (HDM) OFF and DBPM feedback ON; 
+    Note: shutter(s) must be opened and sample should be protected
     '''
     #mov(foil_x, 8)
-    yield from beam_off()  #using monitor holder to protect the sample
+    #yield from beam_off()  #using monitor holder to protect the sample
     #fast_sh.open()
+    #yield from bp.sleep(2)
     #att.set_T(1)
+    yield from bp.sleep(2)  #just in case e.g. the shutter is still opening ...
     yield from mv(hdm_feedback_selector, 0) # turn off epics pid feedback on HDM encoder    
     yield from mv(bpm2_feedback_selector_b, 1)
+    yield from bp.sleep(2)
     yield from mv(bpm2_feedback_selector_a, 1)
 
     # Check that the beam positions in x and y are within some tolerance of 0
     TOLERANCE = 1.0
-    reading = yield from bp.read(bpm_readings)
-    y_pos = reading['bpm_readings_y']['value']
+    #reading = yield from bp.read(bpm_readings)
+    #y_pos = reading['bpm_readings_y']['value']a
+    y_pos = caget('XF:11IDB-BI{XBPM:02}Pos:Y-I')
     if abs(y_pos) > TOLERANCE:
         # cycle it
         yield from mv(bpm2_feedback_selector_b, 0)
         yield from bp.sleep(1)
         yield from mv(bpm2_feedback_selector_b, 1)
-    reading = yield from bp.read(bpm_readings)
-    x_pos = reading['bpm_readings_x']['value']
+    #reading = yield from bp.read(bpm_readings)
+    #x_pos = reading['bpm_readings_x']['value']
+    x_pos = caget('XF:11IDB-BI{XBPM:02}Pos:X-I')
     if abs(x_pos) > TOLERANCE:
         yield from mv(bpm2_feedback_selector_a, 0)
         yield from bp.sleep(1)
@@ -187,9 +227,11 @@ def feedback_ON():
 hdm_pitch = EpicsSignal('XF:11IDA-OP{Mir:HDM-Ax:P}Pos-I', name='hdm_pitch')
 hdm_pid_setpoint = EpicsSignal('XF:11IDA-OP{Mir:HDM-Ax:P}PID-SP', name='hdm_pid_setpoint')
 
-def feedback_OFF(): 
+def feedback_OFF(epics_feedback_on=True): 
     """
-    Turn the beam position feedback off and turn HDM encoder feedback on.
+    feedback_OFF(epics_feedback_on=True)
+    Turns the beam position DBPM feedback OFF and, if epics_feedback_on=True (default) 
+    turns EPICS (HDM encoder) feedback ON.
     """
     # Where are we now?
     reading = yield from bp.read(hdm_pitch)
@@ -197,12 +239,14 @@ def feedback_OFF():
     # {'hdm_pitch': {'value': -1869.0720000000001, 'timestamp': 1504122664.521454}}
     # so we unpack the value from it...
     pos = reading['hdm_pitch']['value']
-
-    # Set the PID loop to maintain this position.
-    yield from mv(hdm_pid_setpoint, pos)
+    #DBPM feedback OFF:
     yield from mv(bpm2_feedback_selector_b, 0)
     yield from mv(bpm2_feedback_selector_a, 0)
-    yield from mv(hdm_feedback_selector, 1)
+    # EPICS feedback ON:
+    if epics_feedback_on: 
+       yield from mv(hdm_pid_setpoint, pos)
+       #Set the PID loop to maintain this position.
+       yield from mv(hdm_feedback_selector, 1)
 
 # alignment/measurement macros are better defined in user specific locations
 #def alignment_mode():
@@ -239,11 +283,19 @@ def feedback_OFF():
 #    att.set_T(1)
 #    caput('XF:11IDB-ES{Dif-Ax:PhH}Cmd:Kill-Cmd',1)
 
-def diode_OUT():
-    mov(foil_x,-26.)
+#def diode_OUT():
+#    mov(foil_x,-26.)
 
 def diode_IN():
-    mov(foil_x,8.)
+    """
+    Moves the pin diode inthe beam to foil_x=17.5 (the sample is thus protected)
+    """
+    nominal_value=17.5
+    RE(mv(foil_x,nominal_value))
+    if abs(foil_x.user_readback.value-nominal_value)>0.5:
+        raise series_Exception('Pin diode position was not reached')
+
+
 
 def snap(det='eiger4m',expt=0.1,comment='Single image'):
     """
@@ -252,17 +304,19 @@ def snap(det='eiger4m',expt=0.1,comment='Single image'):
     takes an Eiger image
     """
     if det == 'eiger4m':
+        dets=[eiger4m_single]
         caput('XF:11IDB-ES{Det:Eig4M}cam1:NumImages',1)
         caput('XF:11IDB-ES{Det:Eig4M}cam1:NumTriggers',1)
         caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquireTime',expt)
         caput('XF:11IDB-ES{Det:Eig4M}cam1:AcquirePeriod',expt)
-        RE(count([eiger4m_single]),Measurement=comment)
+        RE(count(dets),Measurement=comment)
     elif det == 'eiger1m':
+        dets=[eiger1m_single]
         caput('XF:11IDB-ES{Det:Eig1M}cam1:NumImages',1)
         caput('XF:11IDB-ES{Det:Eig1M}cam1:NumTriggers',1)
         caput('XF:11IDB-ES{Det:Eig1M}cam1:AcquireTime',expt)
         caput('XF:11IDB-ES{Det:Eig1M}cam1:AcquirePeriod',expt)
-        RE(count([eiger1m_single]),Measurement=comment)
+        RE(count(dets),Measurement=comment)
 
 ###### sample-detector distance macros for SAXS ##########
 
@@ -352,7 +406,7 @@ def eiger4m_series(expt=.1,acqp='auto',imnum=5,comment=''):
     detector.cam.num_images.value=imnum
     detector.num_triggers.put(1)
     #print('adding metadata: '+time.ctime())
-    sleep(2) # needed to ensure values are updated in EPICS prior to reading them back...
+    RE(sleep(2)) # needed to ensure values are updated in EPICS prior to reading them back...
     RE.md['exposure time']=str(expt)        # add metadata information about this run
     #print('adding metadata acquire period: '+str(detector.cam.acquire_period.value))
     RE.md['acquire period']=str(acqp)
@@ -426,7 +480,7 @@ def eiger1m_series(expt=.1,acqp='auto',imnum=5,comment=''):
     detector.cam.num_images.value=imnum
     detector.num_triggers.put(1)
     #print('adding metadata: '+time.ctime())
-    sleep(2) # needed to ensure values are updated in EPICS prior to reading them back...
+    RE(sleep(2)) # needed to ensure values are updated in EPICS prior to reading them back...
     RE.md['exposure time']=str(expt)        # add metadata information about this run
     #print('adding metadata acquire period: '+str(detector.cam.acquire_period.value))
     RE.md['acquire period']=str(acqp)
@@ -434,7 +488,7 @@ def eiger1m_series(expt=.1,acqp='auto',imnum=5,comment=''):
     RE.md['number of images']=str(imnum)
     RE.md['data path']=idpath
     RE.md['sequence id']=str(seqid)
-    RE.md['transmission']=att.get_T()
+    RE.md['transmission']=att.get_T()*att2.get_T()
     ## add experiment specific metadata:
     RE.md['T_yoke']=str(caget('XF:11IDB-ES{Env:01-Chan:C}T:C-I'))
     #RE.md['T_sample']=str(caget('XF:11IDB-ES{Env:01-Chan:D}T:C-I'))
@@ -470,16 +524,31 @@ def eiger1m_series(expt=.1,acqp='auto',imnum=5,comment=''):
     a=RE.md.pop('transmission')
     log_manual_count()
 
+
+def prep_series_feedback():
+    fast_sh.open()
+    yield from sleep(.5)
+    #RE(mv(hdm_feedback_selector, 0)) # turn off epics pid feedback on HDM encoder    
+    caput('XF:11IDA-OP{Mir:HDM-Ax:P}Sts:FB-Sel',0)
+    caput('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP',1)
+    caput('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP',1)   
+    #RE(mv(bpm2_feedback_selector_a, 1))
+    
 # Lutz's test Nov 08 start
-def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment=''):
+def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='', feedback_on=False, use_xbpm=False):
     """
     det='eiger1m' / 'eiger4m'
     shutter_mode='single' / 'multi'
     expt: exposure time [s]
     acqp: acquire period [s] OR 'auto': acqp=expt
     imnum: number of frames
+    feedback_on=False, (True): open fast shutter, switch off feedback on HDM Epics loop, switch on feedback on DBPM
     comment: free comment (string) shown in Olog and attached as RE.md['Measurement']=comment
     update 01/23/2017:  for imnum <100, set chunk size to 10 images to force download. Might still cause problems under certain conditions!!
+
+    yugang add use_xbpm option at Sep 13, 2017 for test fast shutter by using xbpm
+
+
     """
     print('start of series: '+time.ctime())
     if acqp=='auto':
@@ -489,7 +558,9 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
         idpath=caget('XF:11IDB-ES{Det:Eig1M}cam1:FilePath',' {"longString":true}')
         caput('XF:11IDB-ES{Det:Eig1M}cam1:FWClear',1)    #remove files from the detector
         caput('XF:11IDB-ES{Det:Eig1M}cam1:ArrayCounter',0) # set image counter to '0'
-        if imnum < 500:                                                            # set chunk size
+        if imnum < 10:
+            caput('XF:11IDB-ES{Det:Eig1M}cam1:FWNImagesPerFile',1)
+        elif imnum < 500:                                                            # set chunk size
             caput('XF:11IDB-ES{Det:Eig1M}cam1:FWNImagesPerFile',10)
         else: 
             caput('XF:11IDB-ES{Det:Eig1M}cam1:FWNImagesPerFile',100)
@@ -522,7 +593,7 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
         RE.md['number of images']=str(imnum)
         RE.md['data path']=idpath
         RE.md['sequence id']=str(seqid)
-        RE.md['transmission']=att.get_T()
+        RE.md['transmission']=att.get_T()*att2.get_T()
     if shutter_mode=='multi':
 #        if 1./acqp*1E3>51000:           # check for fast shutter / vacuum issues....
 #            raise series_Exception('error: due to vacuum issues, 1/acqp*1000 !<51000 ')
@@ -563,24 +634,29 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
         RE.md['number of images']=imnum
         RE.md['data path']=idpath
         RE.md['sequence id']=str(seqid)
-        RE.md['transmission']=att.get_T()
+        RE.md['transmission']=att.get_T()*att2.get_T()
     #print('adding experiment specific metadata: '+time.ctime())
     ## add experiment specific metadata:
     RE.md['T_yoke']=str(caget('XF:11IDB-ES{Env:01-Chan:C}T:C-I'))
     RE.md['T_sample']=str(caget('XF:11IDB-ES{Env:01-Chan:D}T:C-I'))
-    if caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP') == 1:
+    if caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP') == 1 or feedback_on == True:
         RE.md['feedback_x']='on'
     elif caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP') == 0:
         RE.md['feedback_x']='off'
-    if caget('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP') == 1:
+    if caget('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP') == 1 or feedback_on == True:
         RE.md['feedback_y']='on'
-    elif caget('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP') == 0:
+    elif caget('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP') == 0: 
         RE.md['feedback_y']='off'
     ## end experiment specific metadata
     print('taking data series: exposure time: '+str(expt)+'s,  period: '+str(acqp)+'s '+str(imnum)+'frames  shutter mode: '+shutter_mode)
     print('Dectris sequence id: '+str(int(seqid)))
     #print('executing count: '+time.ctime())
-    RE(count([detector]),Measurement=comment)
+    if use_xbpm:
+        caput( 'XF:11IDB-BI{XBPM:02}FaSoftTrig-SP',1 ) #yugang add at Sep 13, 2017 for test fast shutter by using xbpm
+        print('User XBPM to monitor beam intensity.')
+    if feedback_on:
+        RE(prep_series_feedback())
+    RE(count([detector]),Measurement=comment)  ### ACQUISITION
     #print('remove metadata: '+time.ctime())    
     a=RE.md.pop('exposure time')        # remove eiger series specific meta data (need better way to remove keys 'silently'....)
     a=RE.md.pop('acquire period')
@@ -599,17 +675,17 @@ class series_Exception(Exception):
     pass
 
 # heating with sample chamber, using both heaters:
-def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # MADE MAJOR CHANGES: NEEDS TESTING!!! [01/23/2017 LW]
+def set_temperature(Tsetpoint,heat_ramp=3,cool_ramp=1,log_entry='on'):       # MADE MAJOR CHANGES: NEEDS TESTING!!! [01/23/2017 LW]
     """
     heating with sample chamber, using both heaters
     macro maintains 40deg difference between both heaters to have a temperature gradient for stabilization
     Tsetpoint: temperature setpoint in deg Celsius!
-    heat_ramp: ramping speed [deg.C/min] on heating. Because of heater issues, currently a ramp with max 2deg.C/min will be enforced!
+    heat_ramp: ramping speed [deg.C/min] on heating. Currently a ramp with max 3deg.C/min will be enforced!
     cool_ramp: ramping speed [deg.C/min] on cooling. '0' -> ramp off!
     log_entry: 'on' / 'off'  -> make olog entry when changing temperature ('try', ignored, if Olog is down...)
     """
-    if heat_ramp > 2.:
-        heat_ramp=2.
+    if heat_ramp > 3.:
+        heat_ramp=3.
     else: pass
     if cool_ramp==0:
         cool_ramp_on=0
@@ -624,7 +700,7 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
         caput('XF:11IDB-ES{Env:01-Out:2}T-SP',273.15+start_T2)
         if cool_ramp==0:                                                                                # print message and make Olog entry, if requested
             print('cooling Channel C to '+str(Tsetpoint)+'deg, no ramp')
-            sleep(5)  # need time to update setpoint....
+            RE(sleep(5))  # need time to update setpoint....
             if log_entry == 'on':
                 try:
                     olog_client.log( 'Changed temperature to T='+ str(Tsetpoint)[:5]+'C, ramp: off')
@@ -643,14 +719,14 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
         #caput('XF:11IDB-ES{Env:01-Out:2}Enbl:Ramp-Sel',cool_ramp_on)
         caput('XF:11IDB-ES{Env:01-Out:1}Val:Ramp-SP',cool_ramp)   # set ramp to requested value
         caput('XF:11IDB-ES{Env:01-Out:2}Val:Ramp-SP',cool_ramp)
-        sleep(5)
+        RE(sleep(5))
         caput('XF:11IDB-ES{Env:01-Out:1}Enbl:Ramp-Sel',cool_ramp_on)        #switch ramp on/off as requested
         caput('XF:11IDB-ES{Env:01-Out:2}Enbl:Ramp-Sel',cool_ramp_on)
         caput('XF:11IDB-ES{Env:01-Out:1}T-SP',273.15+Tsetpoint)    # setting channel C to Tsetpoint
         caput('XF:11IDB-ES{Env:01-Out:2}T-SP',233.15+Tsetpoint) # setting channel B to Tsetpoint-40C
     elif start_T<Tsetpoint:        #heating requested, ramp on
         print('heating Channel C to '+str(Tsetpoint)+'deg @ '+str(heat_ramp)+'deg./min')
-        sleep(5)    
+        RE(sleep(5))    
         if log_entry == 'on':
             try:
                 olog_client.log( 'Changed temperature to T='+ str(Tsetpoint)[:5]+'C, ramp: '+str(heat_ramp)+'deg./min')
@@ -663,11 +739,11 @@ def set_temperature(Tsetpoint,heat_ramp=2,cool_ramp=1,log_entry='on'):       # M
         caput('XF:11IDB-ES{Env:01-Out:2}T-SP',273.15+start_T2)
         caput('XF:11IDB-ES{Env:01-Out:1}Val:Ramp-SP',heat_ramp)   # set ramp to selected value or allowed maximum
         caput('XF:11IDB-ES{Env:01-Out:2}Val:Ramp-SP',heat_ramp)
-        caput('XF:11IDB-ES{Env:01-Out:1}Out:MaxI-SP',.5) # force max current to 0.5 Amp
+        caput('XF:11IDB-ES{Env:01-Out:1}Out:MaxI-SP',1.0) # force max current to 1.0 Amp
         caput('XF:11IDB-ES{Env:01-Out:2}Out:MaxI-SP',.7)
         caput('XF:11IDB-ES{Env:01-Out:1}Val:Range-Sel',3) # force heater range 3 -> should be able to follow 2deg/min ramp
         caput('XF:11IDB-ES{Env:01-Out:2}Val:Range-Sel',3)
-        sleep(5)
+        RE(sleep(5))
         caput('XF:11IDB-ES{Env:01-Out:1}Enbl:Ramp-Sel',1)  # ramp on
         caput('XF:11IDB-ES{Env:01-Out:2}Enbl:Ramp-Sel',1)
         caput('XF:11IDB-ES{Env:01-Out:1}T-SP',273.15+Tsetpoint)    # setting channel C to Tsetpoint
@@ -704,7 +780,7 @@ def wait_temperature(wait_time=1200,dead_band=1.,channel=1,log_entry='on'):
     # initial wait for reaching setpoint temperature
     dT=T_set-caget(ch[ch_num])
     while abs(dT)>2*dead_band:
-        sleep(min([abs(dtime)*60,300]))        # get an update after max 5 minutes...
+        RE(sleep(min([abs(dtime)*60,300])))        # get an update after max 5 minutes...
         dtime=(T_set-caget(ch[ch_num]))/(abs(get_T_gradient(channel))+.1)
         dT=T_set-caget(ch[ch_num])  #why was this commented??
         print(time.ctime()+ '       updated estimate to reach T='+str(T_set)[:5]+'C on channel '+caget('XF:11IDB-ES{Env:01-Out:1}Out-Sel','char')+': '+str(dtime)[:5]+' minutes    current temperature: '+str(caget(ch[ch_num]))[:5]+'C')
@@ -736,7 +812,7 @@ def get_T_stability(wait_time,channel,dead_band):
     ch_num=caget('XF:11IDB-ES{Env:01-Out:'+str(channel)+'}Out-Sel')    
     temperatures=np.zeros(int(wait_time/5))
     for i in range(int(wait_time/5)):
-        sleep(1)
+        RE(sleep(1))
         temperatures[i]=caget(ch[ch_num])-(caget('XF:11IDB-ES{Env:01-Out:'+str(channel)+'}T-SP') - 273.15)
     if max(abs(temperatures))>dead_band:
         T_stability_pass=0
@@ -753,7 +829,7 @@ def get_T_gradient(channel):
     ch_num=caget('XF:11IDB-ES{Env:01-Out:'+str(channel)+'}Out-Sel')    
     T1=caget(ch[ch_num])
     t1=time.time()
-    sleep(60)
+    RE(sleep(60))
     T2=caget(ch[ch_num])
     t2=time.time()
     T_gradient=60*abs(T2-T1)/(t2-t1)
@@ -773,7 +849,7 @@ def olog_entry(string):
 
 # begin test better function to check if beam is available for experiment + better recovery [Jan 2017]
 def check_ring():
-    if caget('SR-OPS{}Mode-Sts',1) == 'Operations' and caget('SR:C11-EPS{PLC:1}Sts:ID_BE_Enbl-Sts') ==1 and caget('SR:C03-BI{DCCT:1}I:Real-I') >200:
+    if caget('SR-OPS{}Mode-Sts',1) == 'Operations' and caget('SR:C11-EPS{PLC:1}Sts:ID_BE_Enbl-Sts') ==1 and caget('SR:C03-BI{DCCT:1}I:Real-I') >180:
         ring_ok=1
         print('checking for SR ring status...seems ok')
     else:
@@ -786,9 +862,9 @@ def wait_for_ring(wait_after=0):
     if ring_ok==0:
         while ring_ok==0:
             print('no beam in SR ring...checking again in 5 minutes.')
-            sleep(300)
+            RE(sleep(300))
             ring_ok=check_ring()
-        sleep(wait_after)
+        RE(sleep(wait_after))
     if ring_ok==1: pass
 
 def check_bl():
@@ -799,23 +875,39 @@ def check_bl():
     checks for feedback running (-> deviation of <.5um combined error in X & Y in slow readout)
     """
     print('checking beamline for beam available...')
-    mov(foil_x,8)
-    if     foil_x.user_readback.value<8.5 and foil_x.user_readback.value>7.5:
-        fe_sh.open()
-        foe_sh.open()
-        fast_sh.open()
-        att.set_T(1)
-        feedback_ON()
-        sleep(2)
-        if caget('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP')==1 and caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP')==1 and abs(caget('XF:11IDB-BI{XBPM:02}Pos:X-I'))+abs(caget('XF:11IDB-BI{XBPM:02}Pos:Y-I'))<.5:
-            bl_ok=1
-            print('################################\n')
-            print('checked beamline: beam on DBPM, all ok!')
-        else:
-            bl_ok=0
-            print('################################\n')
-            print('checked beamline: NO beam on DBPM, not ready for experiment....')
-    else: raise check_Exception('error: cannot block beam in ES with diode, abort beamline check')
+    diode_IN() 
+    fe_sh.open()
+    foe_sh.open()
+    fast_sh.open()
+    current_T=att.get_T()
+    att.set_T(1)
+    time.sleep(2)
+
+    #expected_feedback_voltage_A=3.67    # Dont't drive the beamline into the wall!!!
+    #expected_feedback_voltage_B=4.91
+
+    #if abs(caget('XF:11IDB-BI{XBPM:02}CtrlDAC:ALevel-I')-expected_feedback_voltage_A)>0.4:
+    #   print('Feedback voltage A seems wrong, setting it to '+str(expected_feedback_voltage_A))
+    #    caput('XF:11IDB-BI{XBPM:02}CtrlDAC:ALevel-SP',expected_feedback_voltage_A)
+    #if abs(caget('XF:11IDB-BI{XBPM:02}CtrlDAC:BLevel-I')-expected_feedback_voltage_B)>0.4:
+    #   print('Feedback voltage B seems wrong, setting it to '+str(expected_feedback_voltage_B))
+    #    caput('XF:11IDB-BI{XBPM:02}CtrlDAC:BLevel-SP',expected_feedback_voltage_B)
+    
+    time.sleep(2) 
+
+    RE(feedback_ON())
+    time.sleep(2)
+    if caget('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP')==1 and caget('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP')==1 and abs(caget('XF:11IDB-BI{XBPM:02}Pos:X-I'))+abs(caget('XF:11IDB-BI{XBPM:02}Pos:Y-I'))<.5:
+        bl_ok=1
+        print('################################\n')
+        print('checked beamline: beam on DBPM, all ok!')
+    else:
+        bl_ok=0
+        print('################################\n')
+        print('checked beamline: NO beam on DBPM, not ready for experiment....')
+    att.set_T(current_T)
+    print('Setting back transmission to '+str(current_T))
+    return bl_ok
 
 def check_recover():
     print('checking SR ring and BL for beam available and try to recover if necessary....')
@@ -829,6 +921,7 @@ def check_recover():
         except: pass    
         wait_for_ring()
     bl_ok=check_bl()
+    #bl_ok=check_bl() # let's check a second time ...?!
     if bl_ok==1:
         pass
     elif bl_ok==0:
@@ -839,7 +932,7 @@ def check_recover():
         caput('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP',0)    # DBPM feedback off
         caput('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP',0)
         caput('XF:11IDA-OP{Mir:HDM-Ax:P}Sts:FB-Sel',1) # Epics feedback on HDM on
-        sleep(8)
+        RE(sleep(8))
         if abs(caget('XF:11IDA-OP{Mir:HDM-Ax:P}PID-SP')-caget('XF:11IDA-OP{Mir:HDM-Ax:P}Pos-I'))>.5:
             print('Beam in Storage ring, but cannot recover at BL side...')
             try:
@@ -847,16 +940,17 @@ def check_recover():
             except: pass    
             raise check_Exception('error: looks like the PID loop on SIEPA3P is NOT running, abort recovery attempt')
         else: pass
-        caput('XF:11IDB-BI{XBPM:02}CtrlDAC:BLevel-SP',caget('XF:11IDB-BI{XBPM:02}CtrlDAC:BLevel-SP')) # enforce last known (good) DAC outputs
+        caput('XF:11IDB-BI{XBPM:02}CtrlDAC:BLevel-SP',caget('XF:11IDB-BI{XBPM:02}CtrlDAC:BLevel-SP')) 
+                # enforce last known (good) DAC outputs
         caput('XF:11IDB-BI{XBPM:02}CtrlDAC:ALevel-SP',caget('XF:11IDB-BI{XBPM:02}CtrlDAC:ALevel-SP'))
         caput('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP',1)
-        sleep(10)
+        RE(sleep(10))
         caput('XF:11IDA-OP{Mir:HDM-Ax:P}Sts:FB-Sel',0)
         caput('XF:11IDB-BI{XBPM:02}Fdbk:AEn-SP',1)            # back to feedback on DBPM
-        sleep(10)
+        RE(sleep(10))
         bl_ok=check_bl()
         if bl_ok==0:
-            feeback_ON()    # one last chance...
+            feedback_ON()    # one last chance...
         else: pass
         bl_ok=check_bl()
         if bl_ok==1:
@@ -870,7 +964,6 @@ def check_recover():
                 olog_client.log('Beam in Storage ring, but cannot recover at BL side...abort recovery attempt')
             except: pass    
             raise check_Exception('error: could not recover beam on BL side...abort!')
-            
 
     
 class check_Exception(Exception):
@@ -897,7 +990,7 @@ def check_cryo(level_threshold=55.):
         refill_on=1
         #print('cryo-cooler level: '+ str(caget('XF:11IDA-UT{Cryo:1}L:19-I'))+'-> going to refill cryo_cooler')
         while refill_on==1:
-            sleep(60)
+            RE(sleep(60))
             if caget('XF:11IDA-UT{Cryo:1-IV:19}Pos-I') >10.:
                 print('cryo-cooler refill in progress, filling level: '+str(caget('XF:11IDA-UT{Cryo:1}L:19-I'))[:5])
             elif caget('XF:11IDA-UT{Cryo:1-IV:19}Pos-I') <10.:
@@ -913,7 +1006,7 @@ def kinoform_focus(foc='horz_SAXS_9650'):
     if foc ==     'vert_WAXS_9750':
         mov([k1.z,k1.x,k1.y,k1.chi,k1.theta,k1.phi,k1.lx,k1.ly],[-20.,4.95,-3.167,2.0,-.98,-.68,9.244,3.93])
     if foc ==     'vert_WAXS_12800':
-        mov([k1.z,k1.x,k1.y,k1.chi,k1.theta,k1.phi,k1.lx,k1.ly],[0.,4.55,-3.167,2.65,.2,-.68,9.098,4.916])
+        RE(mv([k1.z,k1.x,k1.y,k1.chi,k1.theta,k1.phi,k1.lx,k1.ly],[0.,4.55,-3.167,2.65,.2,-.68,9.098,4.916]))
     if foc ==     'horz_WAXS_12800':
         mov([k2.z,k2.x,k2.y,k2.chi,k2.theta,k2.phi,k2.lx,k2.ly],[0.,0.002,4.6,.2,-1.24,-2.,-.868,6.975])
     if foc ==     'horz_WAXS_9750':
