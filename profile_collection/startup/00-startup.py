@@ -75,6 +75,7 @@ RE.subscribe(print_scan_ids, 'start')
 
 
 from chxtools import attfuncs as att
+from chxtools import attfuncs2 as att2
 from chxtools import xfuncs as xf
 from chxtools.bpm_stability import bpm_read
 from chxtools import transfuncs as trans  
