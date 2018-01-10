@@ -93,7 +93,7 @@ bst_y = ReversedEpicsMotor('XF:11IDB-ES{Dif-Ax:YV}Mtr', name = 'bst_y')
 
 
 def change_motor_name( device):
-    for k in device.signal_names:
+    for k in device.component_names:
         if hasattr( getattr(device, k), 'user_readback'):
             getattr(device, k).user_readback.name = getattr(device, k).name
         elif hasattr( getattr(device, k), 'readback'):
