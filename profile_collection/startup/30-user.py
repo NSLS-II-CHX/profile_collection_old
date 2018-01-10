@@ -337,10 +337,13 @@ def get_saxs_sd(tube_nr,detector='eiger4m'):
     function returns sample detector distance for SAXS instrument
     based on tube nr, detector and Z1 position
     calling sequence: get_saxs_sd(tube_nr,detector='eiger4m') -> returns sample-detector distance [mm]
+    detector: 'eiger4m','backplate' ('backplate': distance to the plate with the viewports in it)
     '''
     tube=tube_length(tube_nr)
     if detector == 'eiger4m':
         det_chamber=247.136
+    elif detector == 'backplate':
+        det_chamber = 769.536
     else: raise param_Exception('error: detector '+detector+'currently not defined...')
     sd=273.62+caget('XF:11IDB-ES{Tbl:SAXS-Ax:Z1}Mtr.RBV')+tube+det_chamber
     print('sample-detector distance using tube_nr: '+str(tube_nr)+' detector: '+detector+' at Z1 position '+str(caget('XF:11IDB-ES{Tbl:SAXS-Ax:Z1}Mtr.RBV'))+': '+str(sd)+'mm')
@@ -351,10 +354,13 @@ def calc_saxs_sd(tube_nr,z1,detector='eiger4m'):
     function calculates sample detector distance for SAXS instrument
     based on tube nr, detector and Z1 position
     calling sequence: calc_saxs_sd(tube_nr,z1,detector='eiger4m') -> returns sample detector distance [mm]
+	detector: 'eiger4m','backplate' ('backplate': distance to the plate with the viewports in it)
     '''
     tube=tube_length(tube_nr)
     if detector == 'eiger4m':
         det_chamber=247.136
+    elif detector == 'backplate':
+        det_chamber = 769.536
     else: raise param_Exception('error: detector '+detector+'currently not defined...')
     sd=273.62+z1+tube+det_chamber
     print('sample-detector distance using tube_nr: '+str(tube_nr)+' detector: '+detector+' at Z1 position '+str(z1)+': '+str(sd)+'mm')

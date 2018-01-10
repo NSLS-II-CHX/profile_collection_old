@@ -157,7 +157,8 @@ def construct_mca():
 
 try:
     mca = XspressZebra('', name='mca', configuration_attrs=['zebra', 'xs'], read_attrs=['xs'])
-    rois = [ 'roi%02d'%i for i in range(1,17) ]
+    #rois = [ 'roi%02d'%i for i in range(1,17) ]
+    rois = [ 'roi%02d'%i for i in range(1,2) ]
     mca.xs.channel1.rois.read_attrs = rois  #['roi01']    
     mca.xs.channel1.rois.configuration_attrs =  rois #['roi01']
     #mca.xs.channel1.set_roi(1, 5500, 6500)
