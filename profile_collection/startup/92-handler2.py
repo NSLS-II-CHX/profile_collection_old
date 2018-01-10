@@ -97,6 +97,6 @@ class EigerHandler2:
         return EigerImages2(master_path, self._images_per_file, md=md)
 
 # Make reference to the db instance defined in 00-startup.py.
-from eiger_io.fs_handler import LazyEigerHandler
-db.reg.register_handler('AD_EIGER2', EigerHandler2, overwrite=True)
-db.reg.register_handler('AD_EIGER', LazyEigerHandler, overwrite=True)
+from eiger_io.fs_handler_dask import EigerHandlerDask
+db.reg.register_handler('AD_EIGER2', EigerHandlerDask, overwrite=True)
+db.reg.register_handler('AD_EIGER', EigerHandlerDask, overwrite=True)

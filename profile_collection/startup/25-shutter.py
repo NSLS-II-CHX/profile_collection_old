@@ -41,8 +41,8 @@ class FourPVShutter(Device):
         consistency = self.open_status.get() ^ self.close_status.get()
         assert consistency, "Shutter status is not self-consistent"
 
-fe_sh = FourPVShutter('XF:11ID-PPS{Sh:FE}')
-foe_sh = FourPVShutter('XF:11IDA-PPS{PSh}')
+fe_sh = FourPVShutter('XF:11ID-PPS{Sh:FE}', name='fe_sh')
+foe_sh = FourPVShutter('XF:11IDA-PPS{PSh}', name='foe_sh')
 
 class TwoPVShutter(EpicsSignal):
     "TODO: Make me a Device."

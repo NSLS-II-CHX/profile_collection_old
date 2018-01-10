@@ -14,7 +14,7 @@ from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
 from ophyd import Component as Cpt, Signal
 from ophyd.utils import set_and_wait
 from pathlib import PurePath
-from bluesky.plans import stage, unstage, open_run, close_run, trigger_and_read, pause
+from bluesky.plan_stubs import stage, unstage, open_run, close_run, trigger_and_read, pause
 
 
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):

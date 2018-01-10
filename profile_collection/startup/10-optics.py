@@ -19,7 +19,7 @@ class MotorCenterAndGap(Device):
     @property
     def hints(self):
         fields = []
-        for name in self.signal_names:
+        for name in self.component_names:
             motor = getattr(self, name)
             fields.extend(motor.hints['fields'])
         return {'fields': fields}
@@ -104,7 +104,7 @@ class SAXSBeamStop( Device):
     @property
     def hints(self):
         fields = []
-        for name in self.signal_names:
+        for name in self.component_names:
             motor = getattr(self, name)
             fields.extend(motor.hints['fields'])
         return {'fields': fields}
@@ -211,7 +211,7 @@ class Diffractometer(Device):
     @property
     def hints(self):
         fields = []
-        for name in self.signal_names:
+        for name in self.component_names:
             motor = getattr(self, name)
             fields.extend(motor.hints['fields'])
         return {'fields': fields}
