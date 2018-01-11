@@ -1,5 +1,5 @@
 
-from bluesky.plans import DeltaScanPlan
+from bluesky.plans import rel_scan
 from bluesky.callbacks import LiveTable, LivePlot
 
 
@@ -8,6 +8,6 @@ from bluesky.callbacks import LiveTable, LivePlot
 
 subs = [LiveTable(['diff_yh', 'xray_eye3_stats1_total', 'xray_eye3_stats2_total']), 
         LivePlot('xray_eye3_stats1_total', 'diff_yh')]
-print ('A DeltaScan of diff_yh with xray_eye3 as camera')
-RE(DeltaScanPlan([xray_eye3], diff.yh, -.1, .1, 3), subs)
+print('A rel_scan of diff_yh with xray_eye3 as camera')
+RE(rel_scan([xray_eye3], diff.yh, -.1, .1, 3), subs)
 
