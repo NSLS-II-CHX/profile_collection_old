@@ -112,8 +112,9 @@ class EigerBase(AreaDetector):
                root='/XF11ID/',
                reg=db.reg)
     # add the pixel size for EIGER as a dummy PV
-    pixel_size_x = Cpt(SynSignal, func=lambda : 75e-6, name='pixel_size_x')
-    pixel_size_y = Cpt(SynSignal, func=lambda : 75e-6, name='pixel_size_y')
+    pixel_size_x = Cpt(Signal, value=75e-6)
+    pixel_size_y = Cpt(Signal, value=75e-6)
+    beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
