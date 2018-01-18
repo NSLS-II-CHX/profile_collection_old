@@ -12,6 +12,7 @@ from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
                                                  FileStoreBase, new_short_uid,
                                                  FileStoreIterativeWrite)
 from ophyd import Component as Cpt, Signal
+from ophyd.sim import SynSignal
 from ophyd.utils import set_and_wait
 from pathlib import PurePath
 from bluesky.plan_stubs import stage, unstage, open_run, close_run, trigger_and_read, pause
@@ -110,6 +111,9 @@ class EigerBase(AreaDetector):
                write_path_template='/XF11ID/data/%Y/%m/%d/',
                root='/XF11ID/',
                reg=db.reg)
+    # add the pixel size for EIGER as a dummy PV
+    pixel_size_x = Cpt(SynSignal, func=lambda : 75e-6)
+    pixel_size_y = Cpt(SynSignal, func=lambda : 75e-6)
     beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
@@ -242,7 +246,8 @@ def set_eiger_defaults(eiger):
         stats.read_attrs = ['total']
     eiger.configuration_attrs = ['beam_center_x', 'beam_center_y',
                                  'wavelength', 'det_distance', 'cam',
-                                 'threshold_energy', 'photon_energy']
+                                 'threshold_energy', 'photon_energy',
+                                 'pixel_size_x', 'pixel_size_y']
     eiger.cam.read_attrs = []
     eiger.cam.configuration_attrs = ['acquire_time', 'acquire_period',
                                      'num_images']
