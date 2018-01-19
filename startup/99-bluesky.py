@@ -63,7 +63,7 @@ def move_E(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5):
 	print('Done! New X-ray energy is '+ str(dcm.en.user_readback.value/1000)+'keV')
 	
 
-def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=elm.sum_all): 
+def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=[elm]): 
 	"""
 	energy scan: Scanning both Bragg axis and gap of IVU in a linked fashion
 	calling sequence: E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5 det=elm.sum_all.value)
@@ -73,7 +73,7 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=elm.sum_
 	by LW June 2016	
 	"""
 	from cycler import cycler
-	from bluesky import PlanND
+	from bluesky.plans import scan_nd 
 	th_B=list(-1*xf.get_Bragg(xtal,energy)[:,0])
 	if gapmode == "manual":
 		if len(gap) == len(energy):
@@ -85,37 +85,12 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=elm.sum_
 		print('using calculated gap values from xfuncs!')
 	inner = cycler(dcm.b,th_B)+cycler(ivu_gap,gap)
 	#plan = PlanND([det],inner)
-	plan = PlanND([det],inner)
 	#RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
-	RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
+	# switch off best effort plotting
+	bec.disable_plots()
+	RE(scan_nd(det,inner), LivePlot(x='dcm_b',y=det[0].sum_all,fig = plt.figure()))
+	bec.enable_plots()
 
-
-def Energy_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=[eiger1m_single]): 
-	"""
-    Energy_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=[eiger1m_single]):
-    energy scan: Scanning both Bragg axis and gap of IVU in a linked fashion
-	calling sequence: E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto", harm=5 det=elm.sum_all.value)
-	energy: X-ray energy in [keV] & xtal define the Bragg angles used in the scan via xf.get_Bragg()
-	gap: manually entered list of gap values with gapmode="manual" OR calculated from xf.get_gap(energy, harm, default id map) with gapmode="auto"
-	to-do: allow detector selection from 'detselect()'
-	by LW June 2016	
-	"""
-	from cycler import cycler
-	from bluesky import PlanND
-	th_B=list(-1*xf.get_Bragg(xtal,energy)[:,0])
-	if gapmode == "manual":
-		if len(gap) == len(energy):
-			gap = gap
-			print('using manually entered gap values...')
-		else: print('error: length of manually entered list of gap value does not match number of energy points')
-	elif gapmode =="auto":
-		gap=list(xf.get_gap(energy,harm))  
-		print('using calculated gap values from xfuncs!')
-	inner = cycler(dcm.b,th_B)+cycler(ivu_gap,gap)
-	#plan = PlanND([det],inner)
-	plan = PlanND(det,inner)
-	#RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
-	RE(plan)
 
 #### crude test only!!! ####
 def refl_scan(incident_angle):
@@ -226,7 +201,8 @@ suitcase.spec._SCANS_WITH_MOTORS.extend(['scan', 'relative_scan'])
 suitcase.spec._BLUESKY_PLAN_NAMES.extend(['count', 'scan', 'relative_scan'])
 suitcase.spec._SPEC_SCAN_NAMES.extend(['count', 'scan', 'relative_scan'])
 #specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_06_22.spec')
-specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_11_28.spec')
+#specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_11_28.spec')
+specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2018_01_16.spec')
 
 #spec_cb = DocumentToSpec('/home/xf11id/specfiles/testing.spec')
 spec_cb = DocumentToSpec(specpath)
