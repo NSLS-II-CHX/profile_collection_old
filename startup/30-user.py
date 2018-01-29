@@ -201,10 +201,10 @@ def feedback_ON():
     #yield from bp.sleep(2)
     #att.set_T(1)
     
-    yield from sleep(2)  #just in case e.g. the shutter is still opening ...
+    yield from bps.sleep(2)  #just in case e.g. the shutter is still opening ...
     yield from mv(hdm_feedback_selector, 0) # turn off epics pid feedback on HDM encoder    
     yield from mv(bpm2_feedback_selector_b, 1)
-    yield from sleep(2)
+    yield from bps.sleep(2)
     yield from mv(bpm2_feedback_selector_a, 1)
 
     # Check that the beam positions in x and y are within some tolerance of 0
@@ -215,14 +215,14 @@ def feedback_ON():
     if abs(y_pos) > TOLERANCE:
         # cycle it
         yield from mv(bpm2_feedback_selector_b, 0)
-        yield from sleep(1)
+        yield from bps.sleep(1)
         yield from mv(bpm2_feedback_selector_b, 1)
     #reading = yield from bp.read(bpm_readings)
     #x_pos = reading['bpm_readings_x']['value']
     x_pos = caget('XF:11IDB-BI{XBPM:02}Pos:X-I')
     if abs(x_pos) > TOLERANCE:
         yield from mv(bpm2_feedback_selector_a, 0)
-        yield from sleep(1)
+        yield from bps.sleep(1)
         yield from mv(bpm2_feedback_selector_a, 1)
 
 hdm_pitch = EpicsSignal('XF:11IDA-OP{Mir:HDM-Ax:P}Pos-I', name='hdm_pitch')
@@ -534,7 +534,7 @@ def eiger1m_series(expt=.1,acqp='auto',imnum=5,comment=''):
 
 def prep_series_feedback():
     fast_sh.open()
-    yield from sleep(.5)
+    yield from bps.sleep(.5)
     #RE(mv(hdm_feedback_selector, 0)) # turn off epics pid feedback on HDM encoder    
     caput('XF:11IDA-OP{Mir:HDM-Ax:P}Sts:FB-Sel',0)
     caput('XF:11IDB-BI{XBPM:02}Fdbk:BEn-SP',1)
