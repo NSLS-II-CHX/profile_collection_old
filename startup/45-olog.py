@@ -3,6 +3,11 @@ import readline
 from collections import defaultdict
 import queue
 import threading
+from pyOlog import SimpleOlogClient
+
+olog_client = SimpleOlogClient()
+
+
 
 #{{- readline.get_history_item(1)}}
 
