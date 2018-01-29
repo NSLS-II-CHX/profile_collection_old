@@ -1,4 +1,4 @@
-from hxntools.detectors.zebra import (EpicsSignalWithRBV, 
+from nslsii.detectors.zebra import (EpicsSignalWithRBV,
                                       ZebraPulse,
                                       ZebraFrontOutput12,
                                       ZebraFrontOutput3,
@@ -7,7 +7,7 @@ from hxntools.detectors.zebra import (EpicsSignalWithRBV,
                                       ZebraGate,
                                       ZebraAddresses)
 
-from hxntools.detectors.xspress3 import (XspressTrigger, 
+from nslsii.detectors.xspress3 import (XspressTrigger,
                                          Xspress3Detector,
                                          Xspress3Channel)
 from ophyd.areadetector.plugins import PluginBase
