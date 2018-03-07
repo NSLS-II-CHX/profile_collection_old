@@ -542,7 +542,7 @@ def prep_series_feedback():
     #RE(mv(bpm2_feedback_selector_a, 1))
     
 # Lutz's test Nov 08 start
-def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='', feedback_on=False, use_xbpm=False):
+def series(det='eiger4m',shutter_mode='single',expt=.1,acqp='auto',imnum=5,comment='', feedback_on=False, use_xbpm=False,OAV_mode='none'):
     """
     det='eiger1m' / 'eiger4m'
     shutter_mode='single' / 'multi'
@@ -552,9 +552,8 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
     feedback_on=False, (True): open fast shutter, switch off feedback on HDM Epics loop, switch on feedback on DBPM
     comment: free comment (string) shown in Olog and attached as RE.md['Measurement']=comment
     update 01/23/2017:  for imnum <100, set chunk size to 10 images to force download. Might still cause problems under certain conditions!!
-
     yugang add use_xbpm option at Sep 13, 2017 for test fast shutter by using xbpm
-
+    OAV_mode added by LW 01/18/2018: 'none': no image data recorded, 'single': record single image at start of Eiger series, 'start_end': record single image at start and end of Eiger series, 'movie': take contineous stream of images for approximate duration of Eiger series
 
     """
     print('start of series: '+time.ctime())
@@ -578,7 +577,7 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
             pass
         seqid=caget('XF:11IDB-ES{Det:Eig4M}cam1:SequenceId')+1
         idpath=caget('XF:11IDB-ES{Det:Eig4M}cam1:FilePath',' {"longString":true}')
-        #caput('XF:11IDB-ES{Det:Eig4M}cam1:FWClear',1)    #remove files from the detector DISABLED FOR MANUAL DOWNLOAD!!!
+        caput('XF:11IDB-ES{Det:Eig4M}cam1:FWClear',1)    #remove files from the detector DISABLED FOR MANUAL DOWNLOAD!!!
         caput('XF:11IDB-ES{Det:Eig4M}cam1:ArrayCounter',0) # set image counter to '0'
         if imnum < 500:                                                            # set chunk size
             caput('XF:11IDB-ES{Det:Eig4M}cam1:FWNImagesPerFile',10)
@@ -601,6 +600,7 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
         RE.md['data path']=idpath
         RE.md['sequence id']=str(seqid)
         RE.md['transmission']=att.get_T()*att2.get_T()
+        RE.md['OAV_mode']=OAV_mode
     if shutter_mode=='multi':
 #        if 1./acqp*1E3>51000:           # check for fast shutter / vacuum issues....
 #            raise series_Exception('error: due to vacuum issues, 1/acqp*1000 !<51000 ')
@@ -642,6 +642,7 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
         RE.md['data path']=idpath
         RE.md['sequence id']=str(seqid)
         RE.md['transmission']=att.get_T()*att2.get_T()
+        RE.md['OAV_mode']=OAV_mode
     #print('adding experiment specific metadata: '+time.ctime())
     ## add experiment specific metadata:
     RE.md['T_yoke']=str(caget('XF:11IDB-ES{Env:01-Chan:C}T:C-I'))
@@ -658,12 +659,40 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
     print('taking data series: exposure time: '+str(expt)+'s,  period: '+str(acqp)+'s '+str(imnum)+'frames  shutter mode: '+shutter_mode)
     print('Dectris sequence id: '+str(int(seqid)))
     #print('executing count: '+time.ctime())
+    print('OAV_mode: '+OAV_mode)    ### ADDED OAV_mode HERE!
+    if OAV_mode == 'none':
+        detlist=[detector]
+    elif OAV_mode == 'single':
+        detlist=[detector,xray_eye3_writing] ##!!! need to change to OAV
+        org_pt=caget('XF:11IDB-BI{Cam:08}cam1:AcquirePeriod_RBV')
+        org_ni=caget('XF:11IDB-BI{Cam:08}cam1:NumImages_RBV')
+        caput('XF:11IDB-BI{Cam:08}cam1:NumImages',1,wait=True)
+    elif OAV_mode == 'start_end':
+        detlist=[detector,xray_eye3_writing] ##!!! need to change to OAV
+        org_pt=caget('XF:11IDB-BI{Cam:08}cam1:AcquirePeriod_RBV')
+        org_ni=caget('XF:11IDB-BI{Cam:08}cam1:NumImages_RBV')        
+        pt=(expt+acqp)*imnum #period between two images to span Eiger series (exposure time for OAV image neglected)
+        caput('XF:11IDB-BI{Cam:08}cam1:NumImages',2,wait=True)
+        caput('XF:11IDB-BI{Cam:08}cam1:AcquirePeriod',pt,wait=True)
+    elif OAV_mode == 'movie':
+        detlist=[detector,xray_eye3_writing] ##!!! need to change to OAV
+        org_pt=caget('XF:11IDB-BI{Cam:08}cam1:AcquirePeriod_RBV')
+        org_ni=caget('XF:11IDB-BI{Cam:08}cam1:NumImages_RBV')
+        ni=(expt+acqp)*imnum/(caget('XF:11IDB-BI{Cam:08}cam1:AcquireTime')+caget('XF:11IDB-BI{Cam:08}cam1:AcquirePeriod'))
+        caput('XF:11IDB-BI{Cam:08}cam1:NumImages',np.ceil(ni),wait=True)
+    else: raise series_Exception('error: OAV_mode needs to be none|single|start_end|movie...')
     if use_xbpm:
-        caput( 'XF:11IDB-BI{XBPM:02}FaSoftTrig-SP',1 ) #yugang add at Sep 13, 2017 for test fast shutter by using xbpm
+        caput( 'XF:11IDB-BI{XBPM:02}FaSoftTrig-SP',1,wait=True) #yugang add at Sep 13, 2017 for test fast shutter by using xbpm
         print('User XBPM to monitor beam intensity.')
     if feedback_on:
         RE(prep_series_feedback())
-    RE(count([detector]),Measurement=comment)  ### ACQUISITION
+    #RE(count([detector]),Measurement=comment)  ### ACQUISITION
+    RE(count(detlist),Measurement=comment)  ### testing camera images taken simultaneously
+    # setting image number and period back for OAV camera:
+    if OAV_mode != 'none':      ####!!! NEED TO CHANGE TO OAV PVs
+        caput('XF:11IDB-BI{Cam:08}cam1:NumImages',org_ni)
+        caput('XF:11IDB-BI{Cam:08}cam1:AcquirePeriod',org_pt)
+
     #print('remove metadata: '+time.ctime())    
     a=RE.md.pop('exposure time')        # remove eiger series specific meta data (need better way to remove keys 'silently'....)
     a=RE.md.pop('acquire period')
@@ -677,12 +706,12 @@ def series(det='eiger4m',shutter_mode='single',expt=.1,acqp=.1,imnum=5,comment='
     a=RE.md.pop('feedback_x')
     a=RE.md.pop('feedback_y')
     a=RE.md.pop('transmission')
+    a=RE.md.pop('OAV_mode')
 
 class series_Exception(Exception):
     pass
-
 # heating with sample chamber, using both heaters:
-def set_temperature(Tsetpoint,heat_ramp=3,cool_ramp=1,log_entry='on'):       # MADE MAJOR CHANGES: NEEDS TESTING!!! [01/23/2017 LW]
+def set_temperature(Tsetpoint,heat_ramp=3,cool_ramp=0,log_entry='on'):       # MADE MAJOR CHANGES: NEEDS TESTING!!! [01/23/2017 LW]
     """
     heating with sample chamber, using both heaters
     macro maintains 40deg difference between both heaters to have a temperature gradient for stabilization
@@ -882,7 +911,8 @@ def check_bl():
     checks for feedback running (-> deviation of <.5um combined error in X & Y in slow readout)
     """
     print('checking beamline for beam available...')
-    diode_IN() 
+    #diode_IN() 
+    att2.set_T(0) 
     fe_sh.open()
     foe_sh.open()
     fast_sh.open()
