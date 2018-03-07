@@ -73,7 +73,7 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=elm.sum_
 	by LW June 2016	
 	"""
 	from cycler import cycler
-	from bluesky import PlanND
+	#from bluesky import PlanND
 	th_B=list(-1*xf.get_Bragg(xtal,energy)[:,0])
 	if gapmode == "manual":
 		if len(gap) == len(energy):
@@ -85,7 +85,7 @@ def E_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=elm.sum_
 		print('using calculated gap values from xfuncs!')
 	inner = cycler(dcm.b,th_B)+cycler(ivu_gap,gap)
 	#plan = PlanND([det],inner)
-	plan = PlanND([det],inner)
+	plan = scan_nd([det],inner)
 	#RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
 	RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
 
@@ -101,7 +101,7 @@ def Energy_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=[ei
 	by LW June 2016	
 	"""
 	from cycler import cycler
-	from bluesky import PlanND
+	#from bluesky import PlanND
 	th_B=list(-1*xf.get_Bragg(xtal,energy)[:,0])
 	if gapmode == "manual":
 		if len(gap) == len(energy):
@@ -113,7 +113,7 @@ def Energy_scan(energy, gap=[], xtal="Si111cryo", gapmode="auto",harm=5, det=[ei
 		print('using calculated gap values from xfuncs!')
 	inner = cycler(dcm.b,th_B)+cycler(ivu_gap,gap)
 	#plan = PlanND([det],inner)
-	plan = PlanND(det,inner)
+	plan = scan_nd(det,inner)
 	#RE(plan, [LiveTable([dcm.b,ivu_gap,det]),LivePlot(x='dcm_b',y=det.name,fig = plt.figure())])
 	RE(plan)
 
@@ -221,10 +221,11 @@ from suitcase.spec import DocumentToSpec
 import suitcase.spec
 
 # Monkey-patch module globals.
-suitcase.spec._SCANS_WITHOUT_MOTORS.extend(['count'])
-suitcase.spec._SCANS_WITH_MOTORS.extend(['scan', 'relative_scan'])
-suitcase.spec._BLUESKY_PLAN_NAMES.extend(['count', 'scan', 'relative_scan'])
-suitcase.spec._SPEC_SCAN_NAMES.extend(['count', 'scan', 'relative_scan'])
+#suitcase.spec._SCANS_WITHOUT_MOTORS.extend(['count'])
+#suitcase.spec._SCANS_WITH_MOTORS.extend(['scan', 'relative_scan'])
+#suitcase.spec._BLUESKY_PLAN_NAMES.extend(['count', 'scan', 'relative_scan'])
+#suitcase.spec._SPEC_SCAN_NAMES.extend(['count', 'scan', 'relative_scan'])
+
 #specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_06_22.spec')
 specpath = os.path.expanduser('/home/xf11id/specfiles/chx_spec_2017_11_28.spec')
 
